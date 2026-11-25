@@ -28,3 +28,4 @@ exports/
 logs/
 deploy/.env
 *.pem
+sample-data/forgetrace-dump.sql
