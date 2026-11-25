@@ -1,0 +1,610 @@
+﻿
+===== payment-checkout.html =====
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Payment · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/buyer/orders/{id}(id=${checkout.orderId})}" class="small"><i class="bi bi-arrow-left"></i> Order <span th:text="${checkout.orderNumber}">ORD</span></a>
+            <h1 class="page-title mt-1">Payment</h1>
+            <p class="page-subtitle" th:text="${checkout.itemTitle + ' · ' + checkout.manufacturerName}">Item</p>
+        </div>
+        <a class="btn btn-ghost" th:href="@{/buyer/orders/{id}/tracking(id=${checkout.orderId})}"><i class="bi bi-truck me-1"></i> Tracking</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="ft-card" th:if="${checkout.paid}">
+                <h2 class="ft-card-title mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i> This order is paid</h2>
+                <p class="mb-0 text-muted-ft">You can follow the delivery on the tracking page.</p>
+            </div>
+
+            <div class="ft-card" th:if="${!checkout.paid and !checkout.payable}">
+                <h2 class="ft-card-title mb-2">Payment not available</h2>
+                <p class="mb-0 text-muted-ft">This order was cancelled.</p>
+            </div>
+
+            <form th:if="${checkout.payable}" id="paymentForm" class="ft-card"
+                  th:action="@{/buyer/orders/{id}/pay(id=${checkout.orderId})}" th:object="${form}" method="post" novalidate>
+                <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
+                    <p class="mb-0" th:each="err : ${#fields.allErrors()}" th:text="${err}">Error</p>
+                </div>
+                <input type="hidden" th:field="*{idempotencyKey}">
+
+                <label class="form-label">Payment method</label>
+                <div class="row g-2 mb-3">
+                    <div class="col-sm-6" th:each="m : ${methods}">
+                        <label class="pay-method w-100">
+                            <input type="radio" th:field="*{method}" th:value="${m}">
+                            <span th:text="${m.label}">Card</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div data-method-panel="CARD" class="mb-3">
+                    <label class="form-label" for="cardNumber">Card number</label>
+                    <input type="text" id="cardNumber" class="form-control" th:field="*{cardNumber}"
+                           inputmode="numeric" autocomplete="off" placeholder="4111 1111 1111 1111">
+                </div>
+                <div data-method-panel="UPI" class="mb-3">
+                    <label class="form-label" for="upiId">UPI ID</label>
+                    <input type="text" id="upiId" class="form-control" th:field="*{upiId}" autocomplete="off" placeholder="name@okbank">
+                </div>
+                <div data-method-panel="NET_BANKING" class="mb-3 small text-muted-ft">You would be redirected to your bank. In sandbox mode it is approved instantly.</div>
+                <div data-method-panel="WALLET" class="mb-3 small text-muted-ft">In sandbox mode the wallet payment is approved instantly.</div>
+
+                <div class="sandbox-note mb-3">
+                    <strong><i class="bi bi-cone-striped"></i> Sandbox mode, no real money moves.</strong><br>
+                    Approved card: <button type="button" class="btn btn-link btn-sm p-0" data-target="cardNumber" data-fill="4111 1111 1111 1111">4111 1111 1111 1111</button><br>
+                    Declined card: <button type="button" class="btn btn-link btn-sm p-0" data-target="cardNumber" data-fill="4000 0000 0000 0002">4000 0000 0000 0002</button><br>
+                    UPI: <code>success@okbank</code> is approved, <code>fail@okbank</code> is declined.
+                </div>
+
+                <button type="submit" class="btn btn-forge w-100" data-loading-text="Processing..."
+                        th:text="${'Pay ' + @fmt.money(checkout.amount, checkout.currency)}">Pay</button>
+                <p class="small text-muted-ft mt-2 mb-0">Card numbers are never stored by ForgeTrace.</p>
+            </form>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3">Order summary</h2>
+                <dl class="detail-list mb-0">
+                    <dt>Order</dt><dd th:text="${checkout.orderNumber}">ORD</dd>
+                    <dt>Item</dt><dd th:text="${checkout.itemTitle}">Item</dd>
+                    <dt>Manufacturer</dt><dd th:text="${checkout.manufacturerName}">Mfr</dd>
+                    <dt>Quantity</dt><dd th:text="${checkout.quantity.stripTrailingZeros().toPlainString() + ' ' + checkout.quantityUnit}">50</dd>
+                    <dt>Order status</dt><dd><span th:replace="~{fragments/status-badge :: badge(${checkout.orderStatus})}"></span></dd>
+                    <dt>Total (incl. tax)</dt><dd class="fs-5 fw-semibold" th:text="${@fmt.money(checkout.amount, checkout.currency)}">₹0</dd>
+                </dl>
+            </div>
+
+            <div class="ft-card" th:if="${!#lists.isEmpty(checkout.payments)}">
+                <h2 class="ft-card-title mb-3">Attempts</h2>
+                <table class="table table-ft table-sm mb-0">
+                    <tr th:each="p : ${checkout.payments}">
+                        <td><span th:text="${p.reference}">PAY</span><br><small class="text-muted-ft" th:text="${@fmt.dateTime(p.createdAt)}">date</small></td>
+                        <td th:text="${p.method.label}">Card</td>
+                        <td class="text-end">
+                            <span th:replace="~{fragments/status-badge :: badge(${p.status})}"></span>
+                            <br th:if="${p.failureReason != null}"><small class="measure-fail" th:if="${p.failureReason != null}" th:text="${p.failureReason}">reason</small>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script th:src="@{/js/payment-checkout.js}"></script>
+</div>
+</body>
+</html>
+
+===== payment-checkout.js =====
+(function () {
+    const form = document.getElementById('paymentForm');
+    if (!form) return;
+
+    const panels = form.querySelectorAll('[data-method-panel]');
+    const radios = form.querySelectorAll('input[name="method"]');
+
+    function showPanel() {
+        const checked = form.querySelector('input[name="method"]:checked');
+        const method = checked ? checked.value : '';
+        panels.forEach(function (p) {
+            p.classList.toggle('d-none', p.dataset.methodPanel !== method);
+        });
+        form.querySelectorAll('.pay-method').forEach(function (label) {
+            const input = label.querySelector('input');
+            label.classList.toggle('active', input && input.checked);
+        });
+    }
+
+    radios.forEach(function (r) { r.addEventListener('change', showPanel); });
+    showPanel();
+
+    const card = document.getElementById('cardNumber');
+    if (card) {
+        card.addEventListener('input', function () {
+            const digits = card.value.replace(/\D/g, '').slice(0, 19);
+            card.value = digits.replace(/(.{4})/g, '$1 ').trim();
+        });
+    }
+
+    form.querySelectorAll('[data-fill]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const target = document.getElementById(btn.dataset.target);
+            if (target) target.value = btn.dataset.fill;
+        });
+    });
+
+    let submitted = false;
+    form.addEventListener('submit', function (e) {
+        if (submitted) {
+            e.preventDefault();
+            return;
+        }
+        submitted = true;
+    });
+})();
+
+===== BuyerPaymentController.java =====
+package com.forgetrace.controller.buyer;
+
+import com.forgetrace.dto.request.PaymentRequest;
+import com.forgetrace.dto.response.PaymentResult;
+import com.forgetrace.exception.BusinessRuleException;
+import com.forgetrace.service.PaymentService;
+import com.forgetrace.service.ShipmentService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+@RequiredArgsConstructor
+public class BuyerPaymentController {
+
+    private final PaymentService paymentService;
+    private final ShipmentService shipmentService;
+
+    @GetMapping("/buyer/orders/{id}/pay")
+    public String checkout(@PathVariable Long id, Model model) {
+        PaymentService.CheckoutView checkout = paymentService.checkout(id);
+        PaymentRequest form = new PaymentRequest();
+        form.setIdempotencyKey(checkout.idempotencyKey());
+        model.addAttribute("checkout", checkout);
+        model.addAttribute("form", form);
+        model.addAttribute("methods", PaymentService.CUSTOMER_METHODS);
+        return "buyer/payment-checkout";
+    }
+
+    @PostMapping("/buyer/orders/{id}/pay")
+    public String pay(@PathVariable Long id, @Valid @ModelAttribute("form") PaymentRequest form,
+                      BindingResult bindingResult, Model model, RedirectAttributes redirect) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("checkout", paymentService.checkout(id));
+            model.addAttribute("methods", PaymentService.CUSTOMER_METHODS);
+            return "buyer/payment-checkout";
+        }
+        try {
+            PaymentResult result = paymentService.pay(id, form);
+            if (result.replayed()) {
+                redirect.addFlashAttribute("info", "This payment request was already processed (" + result.reference()
+                        + ", " + result.status().getLabel() + "). You were not charged again.");
+                return result.isSucceeded() ? "redirect:/buyer/orders/" + id + "/tracking" : "redirect:/buyer/orders/" + id + "/pay";
+            }
+            if (result.isSucceeded()) {
+                redirect.addFlashAttribute("success", "Payment successful. Reference " + result.reference() + ".");
+                return "redirect:/buyer/orders/" + id + "/tracking";
+            }
+            redirect.addFlashAttribute("error", "Payment failed: " + result.failureReason() + " You were not charged.");
+            return "redirect:/buyer/orders/" + id + "/pay";
+        } catch (BusinessRuleException ex) {
+            redirect.addFlashAttribute("error", ex.getMessage());
+            return "redirect:/buyer/orders/" + id + "/pay";
+        }
+    }
+
+    @GetMapping("/buyer/orders/{id}/tracking")
+    public String tracking(@PathVariable Long id, Model model) {
+        model.addAttribute("t", shipmentService.tracking(id));
+        model.addAttribute("payments", paymentService.forOrder(id));
+        return "buyer/order-tracking";
+    }
+
+    @GetMapping("/buyer/payments")
+    public String list(@RequestParam(defaultValue = "0") int page, Model model) {
+        model.addAttribute("page", paymentService.listForBuyer(page));
+        return "buyer/payments";
+    }
+}
+
+===== PaymentService.java =====
+package com.forgetrace.service;
+
+import com.forgetrace.dto.request.PaymentRequest;
+import com.forgetrace.dto.response.PaymentResult;
+import com.forgetrace.entity.Payment;
+import com.forgetrace.entity.ProductionOrder;
+import com.forgetrace.enums.OrderStatus;
+import com.forgetrace.enums.PaymentMethod;
+import com.forgetrace.enums.PaymentStatus;
+import com.forgetrace.enums.RoleName;
+import com.forgetrace.exception.BusinessRuleException;
+import com.forgetrace.exception.ResourceNotFoundException;
+import com.forgetrace.payment.GatewayRequest;
+import com.forgetrace.payment.GatewayResult;
+import com.forgetrace.payment.PaymentGateway;
+import com.forgetrace.repository.PaymentRepository;
+import com.forgetrace.repository.ProductionOrderRepository;
+import com.forgetrace.security.AccessGuard;
+import com.forgetrace.security.CurrentUserService;
+import com.forgetrace.util.ReferenceNumberGenerator;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceContext;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class PaymentService {
+
+    public static final Set<PaymentMethod> CUSTOMER_METHODS =
+            EnumSet.of(PaymentMethod.CARD, PaymentMethod.UPI, PaymentMethod.NET_BANKING, PaymentMethod.WALLET);
+
+    private final PaymentRepository paymentRepository;
+    private final ProductionOrderRepository orderRepository;
+    private final PaymentGateway gateway;
+    private final NotificationService notificationService;
+    private final ReferenceNumberGenerator referenceNumbers;
+    private final CurrentUserService currentUserService;
+    private final AccessGuard accessGuard;
+    private final AuditService auditService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    public record CheckoutView(
+            Long orderId,
+            String orderNumber,
+            String itemTitle,
+            String manufacturerName,
+            BigDecimal quantity,
+            String quantityUnit,
+            BigDecimal amount,
+            String currency,
+            OrderStatus orderStatus,
+            boolean paid,
+            boolean payable,
+            String idempotencyKey,
+            List<PaymentResult> payments
+    ) {
+    }
+
+    @Transactional(readOnly = true)
+    public CheckoutView checkout(Long orderId) {
+        Long orgId = requireBuyer();
+        ProductionOrder order = orderRepository.findWithDetailsById(orderId)
+                .filter(o -> o.getBuyerOrganization().getId().equals(orgId))
+                .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+        boolean paid = paymentRepository.existsByProductionOrder_IdAndStatus(orderId, PaymentStatus.SUCCEEDED);
+        return new CheckoutView(order.getId(), order.getOrderNumber(), order.getRfq().getTitle(),
+                order.getManufacturerOrganization().getDisplayName(), order.getQuantity(), order.getRfq().getQuantityUnit(),
+                order.getTotalAmount(), order.getCurrency(), order.getStatus(), paid,
+                !paid && order.getStatus() != OrderStatus.CANCELLED,
+                UUID.randomUUID().toString(), paymentsOf(orderId));
+    }
+
+    @Transactional
+    public PaymentResult pay(Long orderId, PaymentRequest form) {
+        Long orgId = requireBuyer();
+        String key = form.getIdempotencyKey().trim();
+
+        Optional<PaymentResult> replay = replay(key, orderId, orgId);
+        if (replay.isPresent()) {
+            return replay.get();
+        }
+
+        ProductionOrder order = entityManager.find(ProductionOrder.class, orderId, LockModeType.PESSIMISTIC_WRITE);
+        if (order == null || !order.getBuyerOrganization().getId().equals(orgId)) {
+            throw new ResourceNotFoundException("Order", orderId);
+        }
+        replay = replay(key, orderId, orgId);
+        if (replay.isPresent()) {
+            return replay.get();
+        }
+
+        if (form.getMethod() == null || !CUSTOMER_METHODS.contains(form.getMethod())) {
+            throw new BusinessRuleException("Choose a payment method.");
+        }
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new BusinessRuleException("This order was cancelled and cannot be paid.");
+        }
+        if (paymentRepository.existsByProductionOrder_IdAndStatus(orderId, PaymentStatus.SUCCEEDED)) {
+            throw new BusinessRuleException("This order is already paid.");
+        }
+
+        Payment payment = new Payment();
+        payment.setProductionOrder(order);
+        payment.setPaymentReference(referenceNumbers.next("PAY"));
+        payment.setProvider(gateway.name());
+        payment.setIdempotencyKey(key);
+        payment.setAmount(order.getTotalAmount());
+        payment.setCurrency(order.getCurrency());
+        payment.setPaymentMethod(form.getMethod());
+        payment.setStatus(PaymentStatus.PENDING);
+        paymentRepository.saveAndFlush(payment);
+
+        GatewayResult result = gateway.charge(new GatewayRequest(payment.getPaymentReference(), payment.getAmount(),
+                payment.getCurrency(), form.getMethod(), form.getCardNumber(), form.getUpiId()));
+
+        Long userId = currentUserService.requireUserId();
+        if (result.success()) {
+            payment.setStatus(PaymentStatus.SUCCEEDED);
+            payment.setProviderReference(result.providerReference());
+            payment.setPaidAt(Instant.now());
+            notificationService.notifyOrganization(order.getManufacturerOrganization().getId(),
+                    "Payment received for " + order.getOrderNumber(),
+                    order.getBuyerOrganization().getDisplayName() + " paid " + order.getCurrency() + " "
+                            + order.getTotalAmount().toPlainString() + ". You can ship once the order is ready.",
+                    "/manufacturer/payments");
+            auditService.record(userId, "PAYMENT_SUCCEEDED", "Payment", payment.getId(), payment.getPaymentReference());
+        } else {
+            payment.setStatus(PaymentStatus.FAILED);
+            payment.setFailureReason(result.failureReason());
+            auditService.record(userId, "PAYMENT_FAILED", "Payment", payment.getId(), result.failureReason());
+        }
+        return toResult(payment, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentResult> forOrder(Long orderId) {
+        ProductionOrder order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+        boolean party = accessGuard.isAdmin() || accessGuard.isMemberOfAny(
+                order.getBuyerOrganization().getId(), order.getManufacturerOrganization().getId());
+        if (!party) {
+            throw new ResourceNotFoundException("Order", orderId);
+        }
+        return paymentsOf(orderId);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isPaid(Long orderId) {
+        return paymentRepository.existsByProductionOrder_IdAndStatus(orderId, PaymentStatus.SUCCEEDED);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PaymentResult> listForBuyer(int page) {
+        Long orgId = requireBuyer();
+        return paymentRepository.findByProductionOrder_BuyerOrganization_IdOrderByCreatedAtDesc(orgId,
+                PageRequest.of(Math.max(page, 0), 15)).map(p -> toResult(p, false));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PaymentResult> listForManufacturer(int page) {
+        accessGuard.requireRole(RoleName.MANUFACTURER);
+        Long orgId = currentUserService.requireOrganizationId();
+        return paymentRepository.findByProductionOrder_ManufacturerOrganization_IdOrderByCreatedAtDesc(orgId,
+                PageRequest.of(Math.max(page, 0), 15)).map(p -> toResult(p, false));
+    }
+
+    private Optional<PaymentResult> replay(String key, Long orderId, Long orgId) {
+        return paymentRepository.findByIdempotencyKey(key).map(p -> {
+            ProductionOrder o = p.getProductionOrder();
+            if (!o.getId().equals(orderId) || !o.getBuyerOrganization().getId().equals(orgId)) {
+                throw new BusinessRuleException("Invalid payment request. Reload the page and try again.");
+            }
+            return toResult(p, true);
+        });
+    }
+
+    private List<PaymentResult> paymentsOf(Long orderId) {
+        return paymentRepository.findByProductionOrder_IdOrderByCreatedAtDesc(orderId).stream()
+                .map(p -> toResult(p, false)).toList();
+    }
+
+    private PaymentResult toResult(Payment p, boolean replayed) {
+        ProductionOrder o = p.getProductionOrder();
+        return new PaymentResult(p.getId(), p.getPaymentReference(), o.getId(), o.getOrderNumber(),
+                o.getBuyerOrganization().getDisplayName(), o.getManufacturerOrganization().getDisplayName(),
+                p.getAmount(), p.getCurrency(), p.getPaymentMethod(), p.getStatus(), p.getFailureReason(),
+                p.getProviderReference(), p.getPaidAt(), p.getCreatedAt(), replayed);
+    }
+
+    private Long requireBuyer() {
+        accessGuard.requireRole(RoleName.BUYER);
+        return currentUserService.requireOrganizationId();
+    }
+}
+
+===== PaymentRequest.java =====
+package com.forgetrace.dto.request;
+
+import com.forgetrace.enums.PaymentMethod;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+public class PaymentRequest {
+
+    @NotNull(message = "Choose a payment method")
+    private PaymentMethod method = PaymentMethod.CARD;
+
+    @NotBlank(message = "Reload the page and try again")
+    @Size(max = 80)
+    private String idempotencyKey;
+
+    @Size(max = 23)
+    private String cardNumber;
+
+    @Size(max = 100)
+    private String upiId;
+}
+
+===== SandboxPaymentGateway.java =====
+package com.forgetrace.payment;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.security.SecureRandom;
+import java.util.regex.Pattern;
+
+@Slf4j
+@Component
+public class SandboxPaymentGateway implements PaymentGateway {
+
+    private static final Pattern UPI_ID = Pattern.compile("^[a-zA-Z0-9._-]{2,64}@[a-zA-Z]{2,32}$");
+    private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    @Override
+    public String name() {
+        return "SANDBOX";
+    }
+
+    @Override
+    public GatewayResult charge(GatewayRequest request) {
+        GatewayResult result = switch (request.method()) {
+            case CARD -> card(request.cardNumber());
+            case UPI -> upi(request.upiId());
+            case NET_BANKING, WALLET -> GatewayResult.ok(newProviderReference());
+            case SANDBOX -> GatewayResult.failed("Choose a payment method.");
+        };
+        log.info("Sandbox charge {} {} {} via {} -> {}", request.paymentReference(), request.amount(), request.currency(),
+                request.method(), result.success() ? "SUCCESS" : "FAILED (" + result.failureReason() + ")");
+        return result;
+    }
+
+    private GatewayResult card(String raw) {
+        String digits = raw == null ? "" : raw.replaceAll("[\\s-]", "");
+        if (!digits.matches("\\d{12,19}") || !passesLuhn(digits)) {
+            return GatewayResult.failed("Card number is not valid.");
+        }
+        if (digits.endsWith("0002")) {
+            return GatewayResult.failed("Card declined by the bank (sandbox test card).");
+        }
+        return GatewayResult.ok(newProviderReference());
+    }
+
+    private GatewayResult upi(String raw) {
+        String id = raw == null ? "" : raw.trim();
+        if (!UPI_ID.matcher(id).matches()) {
+            return GatewayResult.failed("UPI ID is not valid. Example: name@okbank");
+        }
+        if (id.toLowerCase().startsWith("fail")) {
+            return GatewayResult.failed("UPI request declined (sandbox test ID).");
+        }
+        return GatewayResult.ok(newProviderReference());
+    }
+
+    static boolean passesLuhn(String digits) {
+        int sum = 0;
+        boolean doubleIt = false;
+        for (int i = digits.length() - 1; i >= 0; i--) {
+            int d = digits.charAt(i) - '0';
+            if (doubleIt) {
+                d *= 2;
+                if (d > 9) {
+                    d -= 9;
+                }
+            }
+            sum += d;
+            doubleIt = !doubleIt;
+        }
+        return sum % 10 == 0;
+    }
+
+    private static String newProviderReference() {
+        StringBuilder sb = new StringBuilder("sbx_");
+        for (int i = 0; i < 14; i++) {
+            sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
+        }
+        return sb.toString();
+    }
+}
+
+===== QrCodeGenerator.java =====
+package com.forgetrace.qr;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import org.springframework.stereotype.Component;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Map;
+
+@Component
+public class QrCodeGenerator {
+
+    public byte[] png(String content, int size) {
+        try {
+            Map<EncodeHintType, Object> hints = Map.of(
+                    EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M,
+                    EncodeHintType.MARGIN, 1,
+                    EncodeHintType.CHARACTER_SET, "UTF-8");
+            BitMatrix matrix = new QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, size, size, hints);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            MatrixToImageWriter.writeToStream(matrix, "PNG", out);
+            return out.toByteArray();
+        } catch (WriterException | IOException ex) {
+            throw new IllegalStateException("QR code generation failed", ex);
+        }
+    }
+}
+
+===== PaymentMethod.java =====
+package com.forgetrace.enums;
+
+public enum PaymentMethod {
+    CARD("Card"),
+    UPI("UPI"),
+    NET_BANKING("Net banking"),
+    WALLET("Wallet"),
+    SANDBOX("Sandbox (test)");
+
+    private final String label;
+
+    PaymentMethod(String label) {
+        this.label = label;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+}

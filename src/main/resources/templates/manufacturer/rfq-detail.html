@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>RFQ · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/manufacturer/rfqs}" class="small"><i class="bi bi-arrow-left"></i> RFQ inbox</a>
+            <h1 class="page-title mt-1" th:text="${rfq.title}">Title</h1>
+            <p class="page-subtitle">
+                <span th:text="${rfq.rfqNumber}">RFQ</span> · from <strong th:text="${rfq.buyerName}">Buyer</strong>
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span th:replace="~{fragments/status-badge :: badge(${rfq.status})}"></span>
+            <a th:if="${rfq.openForQuotes and verified}" class="btn btn-forge"
+               th:href="@{/manufacturer/rfqs/{id}/quote(id=${rfq.id})}">
+                <i class="bi bi-send me-1"></i>
+                <span th:text="${#lists.isEmpty(myQuotations)} ? 'Submit quotation' : 'Revise quotation'">Submit quotation</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="banner-info" th:if="${!rfq.openForQuotes}">
+        <i class="bi bi-lock"></i>
+        <div>This RFQ is no longer accepting quotations.</div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3">Requirements</h2>
+                <dl class="row detail-list mb-0">
+                    <dt class="col-sm-3">Process</dt><dd class="col-sm-9" th:text="${rfq.processName}">CNC</dd>
+                    <dt class="col-sm-3">Material</dt><dd class="col-sm-9" th:text="${rfq.materialName}">Steel</dd>
+                    <dt class="col-sm-3">Quantity</dt>
+                    <dd class="col-sm-9" th:text="${rfq.quantity.stripTrailingZeros().toPlainString() + ' ' + rfq.quantityUnit}">100 pcs</dd>
+                    <dt class="col-sm-3">Description</dt>
+                    <dd class="col-sm-9" style="white-space: pre-line" th:text="${rfq.description} ?: '—'">Description</dd>
+                    <th:block th:if="${!#lists.isEmpty(rfq.specifications)}">
+                        <dt class="col-sm-3">Specifications</dt>
+                        <dd class="col-sm-9">
+                            <table class="table table-ft table-sm mb-0">
+                                <tr th:each="s : ${rfq.specifications}">
+                                    <td class="text-muted-ft" style="width: 40%" th:text="${s.name}">Name</td>
+                                    <td th:text="${s.value}">Value</td>
+                                </tr>
+                            </table>
+                        </dd>
+                    </th:block>
+                    <dt class="col-sm-3">Tolerances</dt>
+                    <dd class="col-sm-9" th:text="${rfq.toleranceNotes} ?: '—'">Notes</dd>
+                </dl>
+            </div>
+
+            <!-- My quotation history -->
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Your quotations</h2>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(myQuotations)}">
+                    <table class="table table-ft">
+                        <thead><tr><th>Quotation</th><th class="text-end">Total</th><th>Lead time</th><th>Valid until</th><th>Status</th><th></th></tr></thead>
+                        <tbody>
+                        <tr th:each="q : ${myQuotations}">
+                            <td><span th:text="${q.quotationNumber}">QTN</span> <small th:text="${'v' + q.versionNumber}">v1</small></td>
+                            <td class="text-end" th:text="${@fmt.money(q.totalAmount, q.currency)}">₹0</td>
+                            <td th:text="${q.leadTimeDays + ' days'}">14</td>
+                            <td th:text="${@fmt.date(q.validUntil)}">date</td>
+                            <td><span th:replace="~{fragments/status-badge :: badge(${q.status})}"></span></td>
+                            <td class="text-end">
+                                <form th:if="${q.status.name() == 'SUBMITTED'}" th:action="@{/manufacturer/quotations/{id}/withdraw(id=${q.quotationId})}"
+                                      method="post" data-confirm="Withdraw this quotation? The buyer will be informed.">
+                                    <button type="submit" class="btn btn-sm btn-ghost text-danger">Withdraw</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="small text-muted-ft mb-0" th:if="${#lists.isEmpty(myQuotations)}">You have not quoted on this RFQ yet.</p>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3">Timeline</h2>
+                <dl class="detail-list mb-0">
+                    <dt>Quote deadline</dt>
+                    <dd><span th:text="${@fmt.dateTime(rfq.quoteDeadline)}">date</span>
+                        <small class="text-muted-ft d-block" th:text="${@fmt.timeLeft(rfq.quoteDeadline)}">left</small></dd>
+                    <dt>Required delivery</dt><dd th:text="${@fmt.localDate(rfq.deliveryDate)}">date</dd>
+                    <dt>Deliver to</dt><dd style="white-space: pre-line" th:text="${rfq.deliveryAddress}">Address</dd>
+                </dl>
+            </div>
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Drawings</h2>
+                <a th:each="a : ${rfq.attachments}" class="file-link" th:href="@{/files/{id}(id=${a.fileId})}">
+                    <i class="bi bi-file-earmark-arrow-down text-info"></i>
+                    <span class="flex-grow-1 text-truncate" th:text="${a.filename}">drawing.pdf</span>
+                    <small class="text-muted-ft" th:text="${#numbers.formatDecimal(a.sizeBytes / 1024.0, 1, 0) + ' KB'}">120 KB</small>
+                </a>
+                <p class="small text-muted-ft mb-0" th:if="${#lists.isEmpty(rfq.attachments)}">No files attached.</p>
+                <p class="small text-muted-ft mt-2 mb-0"><i class="bi bi-shield-lock"></i> Drawings may only be used to prepare your quotation.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

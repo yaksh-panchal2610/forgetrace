@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>New RFQ · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/buyer/rfqs}" class="small"><i class="bi bi-arrow-left"></i> RFQs</a>
+            <h1 class="page-title mt-1">New request for quotation</h1>
+            <p class="page-subtitle">Only verified manufacturers offering the selected process and material will see this RFQ.</p>
+        </div>
+    </div>
+
+    <form th:action="@{/buyer/rfqs}" th:object="${form}" method="post" enctype="multipart/form-data" novalidate>
+        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+            <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+        </div>
+        <div th:if="${#fields.hasErrors('*')}" class="alert alert-warning small">
+            <i class="bi bi-paperclip me-1"></i> Please fix the highlighted fields. For security, browsers clear file
+            fields - select your drawings again before submitting.
+        </div>
+
+        <div class="row g-4">
+            <div class="col-xl-8">
+                <!-- What -->
+                <div class="ft-card mb-4">
+                    <h2 class="ft-card-title mb-3">What do you need?</h2>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label" for="title">Title</label>
+                            <input type="text" th:field="*{title}" class="form-control" th:errorclass="is-invalid"
+                                   placeholder="e.g. Aluminium mounting bracket, anodised">
+                            <div class="invalid-feedback" th:errors="*{title}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="processId">Process</label>
+                            <select th:field="*{processId}" class="form-select" th:errorclass="is-invalid">
+                                <option value="">Choose a process</option>
+                                <option th:each="p : ${processes}" th:value="${p.id}" th:text="${p.processName}">CNC</option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{processId}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="materialId">Material</label>
+                            <select th:field="*{materialId}" class="form-select" th:errorclass="is-invalid">
+                                <option value="">Choose a material</option>
+                                <option th:each="m : ${materials}" th:value="${m.id}" th:text="${m.materialName}">Steel</option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{materialId}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="quantity">Quantity</label>
+                            <input type="number" step="any" min="0" th:field="*{quantity}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{quantity}"></div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="quantityUnit">Unit</label>
+                            <input type="text" th:field="*{quantityUnit}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{quantityUnit}"></div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="description">Description</label>
+                            <textarea th:field="*{description}" rows="4" class="form-control" th:errorclass="is-invalid"
+                                      placeholder="Application, finish, packaging, inspection requirements..."></textarea>
+                            <div class="invalid-feedback" th:errors="*{description}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Specifications -->
+                <div class="ft-card mb-4">
+                    <div class="ft-card-header mb-2">
+                        <h2 class="ft-card-title">Technical specifications</h2>
+                        <button type="button" class="btn btn-sm btn-ghost" data-spec-add><i class="bi bi-plus-lg"></i> Add row</button>
+                    </div>
+                    <p class="small text-muted-ft">Optional. For example: Thickness = 2 mm, Finish = Anodised black.</p>
+                    <div data-spec-rows>
+                        <div class="row g-2 mb-2" data-spec-row th:each="spec, stat : *{specs}">
+                            <div class="col-5">
+                                <input type="text" class="form-control" data-field="name" maxlength="60"
+                                       th:field="*{specs[__${stat.index}__].name}" placeholder="e.g. Thickness">
+                            </div>
+                            <div class="col-6">
+                                <input type="text" class="form-control" data-field="value" maxlength="200"
+                                       th:field="*{specs[__${stat.index}__].value}" placeholder="e.g. 2 mm">
+                            </div>
+                            <div class="col-1 d-grid">
+                                <button type="button" class="btn btn-ghost" data-spec-remove aria-label="Remove row"><i class="bi bi-x-lg"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label" for="toleranceNotes">Tolerance notes</label>
+                        <textarea th:field="*{toleranceNotes}" rows="2" class="form-control" th:errorclass="is-invalid"
+                                  placeholder="e.g. ±0.05 mm on bore diameters"></textarea>
+                        <div class="invalid-feedback" th:errors="*{toleranceNotes}"></div>
+                    </div>
+                </div>
+
+                <!-- Drawings -->
+                <div class="ft-card mb-4">
+                    <h2 class="ft-card-title mb-2">Drawings &amp; documents</h2>
+                    <input class="form-control" type="file" id="attachments" name="attachments" multiple
+                           accept=".pdf,.png,.jpg,.jpeg,.dxf,.step,.stp">
+                    <div class="form-text text-muted-ft">Up to 5 files · PDF, PNG, JPG, DXF, STEP · 10 MB each, 20 MB total.
+                        Only matching verified manufacturers can open them.</div>
+                    <div class="text-danger small mt-1 d-none" data-file-warning>You selected more than 5 files.</div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <!-- When & where -->
+                <div class="ft-card mb-4">
+                    <h2 class="ft-card-title mb-3">Timeline &amp; delivery</h2>
+                    <div class="mb-3">
+                        <label class="form-label" for="quoteDeadline">Quote deadline (IST)</label>
+                        <input type="datetime-local" th:field="*{quoteDeadline}" class="form-control" th:errorclass="is-invalid">
+                        <div class="invalid-feedback" th:errors="*{quoteDeadline}"></div>
+                        <div class="form-text text-muted-ft">Manufacturers can quote until this time.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="deliveryDate">Required delivery date</label>
+                        <input type="date" th:field="*{deliveryDate}" class="form-control" th:errorclass="is-invalid">
+                        <div class="invalid-feedback" th:errors="*{deliveryDate}"></div>
+                    </div>
+                    <div>
+                        <label class="form-label" for="deliveryAddress">Delivery address</label>
+                        <textarea th:field="*{deliveryAddress}" rows="3" class="form-control" th:errorclass="is-invalid"></textarea>
+                        <div class="invalid-feedback" th:errors="*{deliveryAddress}"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-forge w-100 py-2" data-loading-text="Posting RFQ...">
+                    <i class="bi bi-send me-1"></i> Post RFQ
+                </button>
+                <p class="small text-muted-ft mt-2 mb-0">You can cancel an open RFQ at any time.</p>
+            </div>
+        </div>
+    </form>
+
+    <script th:src="@{/js/rfq-form.js}"></script>
+</div>
+</body>
+</html>

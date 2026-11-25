@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Disputes · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header"><div><h1 class="page-title">Disputes</h1>
+        <p class="page-subtitle">Raise a problem with an order. The ForgeTrace team reviews every dispute.</p></div></div>
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <form class="ft-card" th:action="@{/buyer/disputes}" th:object="${form}" method="post" novalidate>
+                <h2 class="ft-card-title mb-3">Open a dispute</h2>
+                <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                    <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+                </div>
+                <p class="small text-muted-ft" th:if="${#lists.isEmpty(orders)}">You have no orders yet.</p>
+                <th:block th:if="${!#lists.isEmpty(orders)}">
+                    <label class="form-label" for="orderId">Order</label>
+                    <select th:field="*{orderId}" class="form-select mb-3" th:errorclass="is-invalid">
+                        <option th:each="o : ${orders}" th:value="${o.id}" th:text="${o.orderNumber + ' · ' + o.title}">ORD</option>
+                    </select>
+                    <label class="form-label" for="reason">Reason</label>
+                    <input type="text" th:field="*{reason}" class="form-control mb-1" th:errorclass="is-invalid"
+                           placeholder="e.g. 20 parts out of tolerance">
+                    <div class="invalid-feedback d-block mb-2" th:errors="*{reason}"></div>
+                    <label class="form-label" for="description">Details</label>
+                    <textarea th:field="*{description}" rows="4" class="form-control mb-3"></textarea>
+                    <button type="submit" class="btn btn-forge w-100">Submit dispute</button>
+                </th:block>
+            </form>
+        </div>
+        <div class="col-lg-7">
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Your disputes</h2>
+                <div class="table-responsive" th:if="${!page.isEmpty()}">
+                    <table class="table table-ft">
+                        <thead><tr><th>Order</th><th>Reason</th><th>Status</th></tr></thead>
+                        <tbody>
+                        <tr th:each="d : ${page.content}">
+                            <td><a th:href="@{/buyer/orders/{id}(id=${d.orderId})}" th:text="${d.orderNumber}">ORD</a><br>
+                                <small class="text-muted-ft" th:text="${@fmt.date(d.createdAt)}">d</small></td>
+                            <td><span th:text="${d.reason}">r</span>
+                                <small class="d-block text-muted-ft" th:if="${d.resolution != null}" th:text="${'Resolution: ' + d.resolution}">res</small></td>
+                            <td><span th:replace="~{fragments/status-badge :: badge(${d.status})}"></span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="small text-muted-ft mb-0" th:if="${page.isEmpty()}">No disputes. Good news!</p>
+            </div>
+            <nav th:replace="~{fragments/pagination :: pagination(${page}, '/buyer/disputes')}"></nav>
+        </div>
+    </div>
+</div>
+</body>
+</html>

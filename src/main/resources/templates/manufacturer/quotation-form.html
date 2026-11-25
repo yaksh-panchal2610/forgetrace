@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Submit quotation · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/manufacturer/rfqs/{id}(id=${rfq.id})}" class="small"><i class="bi bi-arrow-left"></i> <span th:text="${rfq.title}">RFQ</span></a>
+            <h1 class="page-title mt-1">Your quotation</h1>
+            <p class="page-subtitle">
+                <span th:text="${rfq.rfqNumber}">RFQ</span> · <span th:text="${rfq.buyerName}">Buyer</span>
+                · Quote by <span th:text="${@fmt.dateTime(rfq.quoteDeadline)}">date</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="ft-card">
+                <form th:action="@{/manufacturer/rfqs/{id}/quote(id=${rfq.id})}" th:object="${form}" method="post"
+                      novalidate data-price-preview th:attr="data-quantity=${rfq.quantity}">
+                    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                        <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="unitPrice">Unit price (₹ per <span th:text="${rfq.quantityUnit}">pcs</span>)</label>
+                            <input type="number" step="0.01" min="0" th:field="*{unitPrice}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{unitPrice}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="setupFee">One-time setup fee (₹)</label>
+                            <input type="number" step="0.01" min="0" th:field="*{setupFee}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{setupFee}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="taxRatePercent">GST %</label>
+                            <input type="number" step="0.01" min="0" max="28" th:field="*{taxRatePercent}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{taxRatePercent}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="leadTimeDays">Lead time (days)</label>
+                            <input type="number" min="1" max="365" th:field="*{leadTimeDays}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{leadTimeDays}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="validUntil">Valid until</label>
+                            <input type="date" th:field="*{validUntil}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{validUntil}"></div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="terms">Terms <span class="text-muted-ft">(optional)</span></label>
+                            <textarea th:field="*{terms}" rows="4" class="form-control" th:errorclass="is-invalid"
+                                      placeholder="Payment terms, packaging, inspection, freight..."></textarea>
+                            <div class="invalid-feedback" th:errors="*{terms}"></div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-forge px-4 mt-4" data-loading-text="Sending...">
+                        <i class="bi bi-send me-1"></i> Send quotation
+                    </button>
+                    <p class="small text-muted-ft mt-2 mb-0">Sending again later creates a new version and replaces this one.</p>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3">Price preview</h2>
+                <div class="price-box">
+                    <div class="row-line">
+                        <span>Quantity</span>
+                        <span th:text="${rfq.quantity.stripTrailingZeros().toPlainString() + ' ' + rfq.quantityUnit}">100 pcs</span>
+                    </div>
+                    <div class="row-line"><span>Subtotal (incl. setup)</span><span data-out="subtotal">₹0.00</span></div>
+                    <div class="row-line"><span>GST</span><span data-out="tax">₹0.00</span></div>
+                    <div class="row-line total-line"><span>Total for buyer</span><span data-out="total">₹0.00</span></div>
+                </div>
+                <p class="small text-muted-ft mt-2 mb-0">Preview only - the final total is calculated by the server.</p>
+            </div>
+
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">RFQ summary</h2>
+                <dl class="detail-list mb-0">
+                    <dt>Process / material</dt><dd th:text="${rfq.processName + ' · ' + rfq.materialName}">CNC · Steel</dd>
+                    <dt>Required delivery</dt><dd th:text="${@fmt.localDate(rfq.deliveryDate)}">date</dd>
+                    <dt>Tolerances</dt><dd th:text="${rfq.toleranceNotes} ?: '—'">notes</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/quotation-compare.js}"></script>
+</div>
+</body>
+</html>

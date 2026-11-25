@@ -1,0 +1,5 @@
+machine_name,machine_type,model_number,serial_number,capacity_value,capacity_unit,status,location,processes,materials
+VMC-850 Vertical Machining Centre,CNC Mill,VMC-850,SN-VMC-001,850,mm travel,ACTIVE,Bay 1,CNC Machining,Mild Steel;Aluminium 6061
+CNC Lathe LT-200,CNC Lathe,LT-200,SN-LT-002,200,mm swing,ACTIVE,Bay 1,CNC Machining,Mild Steel;Stainless Steel 304
+Fiber Laser 3kW,Laser Cutter,FL-3015,SN-FL-003,3000,W,ACTIVE,Bay 2,Laser Cutting,Mild Steel;Stainless Steel 304
+"Press Brake 100T, Hydraulic",Press Brake,PB-100,SN-PB-004,100,tonnes,MAINTENANCE,Bay 3,Sheet Metal Fabrication,Mild Steel

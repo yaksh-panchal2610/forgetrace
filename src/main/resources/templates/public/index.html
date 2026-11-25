@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/public :: layout(~{::title}, ~{::content})}">
+<head><title>ForgeTrace | Make parts. Trace every one.</title></head>
+<body>
+<div th:fragment="content" class="fx-home">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+
+    <section class="fx-hero fx-bleed">
+        <video class="fx-hero-video" autoplay muted loop playsinline preload="metadata"
+               th:attr="poster=@{/images/home/hero-poster.jpg}">
+            <source th:src="@{/images/home/hero.mp4}" type="video/mp4">
+        </video>
+        <div class="fx-hero-shade"></div>
+        <div class="container position-relative">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-7">
+                    <span class="fx-eyebrow" data-reveal><span class="fx-dot"></span> B2B manufacturing, made traceable</span>
+                    <h1 class="fx-hero-title" data-reveal style="--d:.1s">From drawing to doorstep.<br><span class="fx-grad">Every part traceable.</span></h1>
+                    <p class="fx-hero-lead" data-reveal style="--d:.2s">Post what you need, compare quotes from verified manufacturers, pay securely, and get a QR passport that proves how every batch was made and inspected.</p>
+                    <div class="d-flex flex-wrap gap-3 mt-4" data-reveal style="--d:.3s">
+                        <a class="fx-btn fx-btn-primary"
+                           th:href="${currentUser != null} ? @{${dashboardUrl}} : @{/auth/register/buyer}">
+                            <i class="bi bi-send"></i>
+                            <span th:text="${currentUser != null} ? 'Go to dashboard' : 'Post your first RFQ'">Post your first RFQ</span>
+                        </a>
+                        <a class="fx-btn fx-btn-glass" th:href="@{/manufacturers}"><i class="bi bi-buildings"></i> Browse manufacturers</a>
+                    </div>
+                    <ul class="fx-hero-points" data-reveal style="--d:.4s">
+                        <li><i class="bi bi-patch-check-fill"></i><span th:text="${verifiedCount}">100</span>&nbsp;verified manufacturers</li>
+                        <li><i class="bi bi-eye-fill"></i>Full price, no hidden charges</li>
+                        <li><i class="bi bi-qr-code"></i>QR passport for every batch</li>
+                    </ul>
+                </div>
+                <div class="col-lg-5 d-none d-lg-block" data-reveal style="--d:.3s">
+                    <div class="fx-live-card">
+                        <div class="fx-live-head">
+                            <div>
+                                <div class="small text-uppercase" style="color: var(--fx-muted); letter-spacing: .1em">Example order</div>
+                                <div class="fx-display fs-5 fw-semibold text-white">Steel mounting bracket</div>
+                            </div>
+                            <span class="fx-live-badge"><i class="bi bi-broadcast"></i> Live</span>
+                        </div>
+                        <ol class="fx-track" id="fxTrack">
+                            <li><span class="fx-node"><i class="bi bi-file-earmark-text"></i></span>RFQ posted</li>
+                            <li><span class="fx-node"><i class="bi bi-cash-stack"></i></span>3 quotations received</li>
+                            <li><span class="fx-node"><i class="bi bi-hand-thumbs-up"></i></span>Best quote accepted</li>
+                            <li><span class="fx-node"><i class="bi bi-qr-code-scan"></i></span>Paid by UPI QR</li>
+                            <li><span class="fx-node"><i class="bi bi-gear-wide-connected"></i></span>In production</li>
+                            <li><span class="fx-node"><i class="bi bi-clipboard2-check"></i></span>Inspected and approved</li>
+                            <li><span class="fx-node"><i class="bi bi-truck"></i></span>Shipped with passport</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="fx-section fx-light fx-bleed">
+        <div class="container">
+            <div class="text-center mx-auto mb-5" style="max-width: 680px" data-reveal>
+                <span class="fx-kicker">How it works</span>
+                <h2 class="fx-h2">Four steps. One dashboard. Zero chasing.</h2>
+                <p class="fx-sub mx-auto">One connected record follows your parts from the first quote to the final shipment.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-xl-3" data-reveal style="--d:0s">
+                    <div class="fx-step">
+                        <div class="fx-media">
+                            <i class="bi bi-file-earmark-text fx-media-icon"></i>
+                            <img th:src="@{/images/home/step-rfq.jpg}" alt="Engineer reviewing a technical drawing" loading="lazy">
+                            <span class="fx-step-num">01</span>
+                        </div>
+                        <div class="fx-step-body">
+                            <h3>Post an RFQ</h3>
+                            <p>Describe the part, process, material, quantity and delivery date. Attach drawings securely.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3" data-reveal style="--d:.1s">
+                    <div class="fx-step">
+                        <div class="fx-media">
+                            <i class="bi bi-cash-stack fx-media-icon"></i>
+                            <img th:src="@{/images/home/step-quote.jpg}" alt="Manufacturer preparing a quotation" loading="lazy">
+                            <span class="fx-step-num">02</span>
+                        </div>
+                        <div class="fx-step-body">
+                            <h3>Compare quotations</h3>
+                            <p>Matching verified manufacturers quote. Compare price, lead time and terms side by side.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3" data-reveal style="--d:.2s">
+                    <div class="fx-step">
+                        <div class="fx-media">
+                            <i class="bi bi-gear-wide-connected fx-media-icon"></i>
+                            <img th:src="@{/images/home/step-make.jpg}" alt="CNC machine cutting metal" loading="lazy">
+                            <span class="fx-step-num">03</span>
+                        </div>
+                        <div class="fx-step-body">
+                            <h3>Track production</h3>
+                            <p>Pay by card or UPI QR, then follow machine booking, batches and quality inspection.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3" data-reveal style="--d:.3s">
+                    <div class="fx-step">
+                        <div class="fx-media">
+                            <i class="bi bi-truck fx-media-icon"></i>
+                            <img th:src="@{/images/home/step-ship.jpg}" alt="Packed parts ready for shipping" loading="lazy">
+                            <span class="fx-step-num">04</span>
+                        </div>
+                        <div class="fx-step-body">
+                            <h3>Receive with a passport</h3>
+                            <p>Every approved batch gets a QR passport showing its production and inspection record.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="fx-section fx-bleed bg-white">
+        <div class="container">
+            <div class="row align-items-center g-5 mb-5 pb-lg-4">
+                <div class="col-lg-6" data-reveal>
+                    <div class="fx-media fx-split-media">
+                        <i class="bi bi-building fx-media-icon"></i>
+                        <img th:src="@{/images/home/buyers.jpg}" alt="Procurement team reviewing parts" loading="lazy">
+                    </div>
+                </div>
+                <div class="col-lg-6" data-reveal style="--d:.15s">
+                    <span class="fx-tag"><i class="bi bi-bag-check"></i> For buyers</span>
+                    <h2 class="fx-h2">Stop emailing ten workshops for one quote.</h2>
+                    <p class="fx-sub">Reach verified manufacturers who already have the right machines, and know exactly what you will pay before you commit.</p>
+                    <ul class="fx-checks">
+                        <li><i class="bi bi-check2-circle"></i>Lowest price and fastest delivery highlighted automatically</li>
+                        <li><i class="bi bi-check2-circle"></i>Secure payment with card, UPI ID or UPI QR</li>
+                        <li><i class="bi bi-check2-circle"></i>Recall alerts if a batch you received has a problem</li>
+                    </ul>
+                    <a class="fx-btn fx-btn-dark mt-2" th:href="@{/auth/register/buyer}">I need parts made <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </div>
+            <div class="row align-items-center g-5 flex-lg-row-reverse">
+                <div class="col-lg-6" data-reveal>
+                    <div class="fx-media fx-split-media">
+                        <i class="bi bi-tools fx-media-icon"></i>
+                        <img th:src="@{/images/home/makers.jpg}" alt="Machinist working in a factory" loading="lazy">
+                    </div>
+                </div>
+                <div class="col-lg-6" data-reveal style="--d:.15s">
+                    <span class="fx-tag"><i class="bi bi-gear"></i> For manufacturers</span>
+                    <h2 class="fx-h2">Fill your idle machine hours with real orders.</h2>
+                    <p class="fx-sub">Get RFQs that match your processes, book machine time without clashes, and get paid before you ship.</p>
+                    <ul class="fx-checks">
+                        <li><i class="bi bi-check2-circle"></i>Only RFQs your machines can actually make</li>
+                        <li><i class="bi bi-check2-circle"></i>Machine calendar with maintenance blocks built in</li>
+                        <li><i class="bi bi-check2-circle"></i>Verified badge and reviews that win repeat buyers</li>
+                    </ul>
+                    <a class="fx-btn fx-btn-dark mt-2" th:href="@{/auth/register/manufacturer}">I manufacture parts <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="fx-section fx-light fx-bleed">
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4" data-reveal>
+                <div>
+                    <span class="fx-kicker">Directory</span>
+                    <h2 class="fx-h2 mb-0">Verified manufacturers</h2>
+                </div>
+                <a class="fx-btn fx-btn-dark" th:href="@{/manufacturers}">View all <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="row g-4" th:if="${!#lists.isEmpty(featured)}">
+                <div class="col-md-6 col-lg-4" th:each="m, s : ${featured}" data-reveal th:style="${'--d:' + (s.index * 0.08) + 's'}">
+                    <div th:replace="~{public/manufacturers :: card(${m})}"></div>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(featured)}" class="fx-feature text-center">
+                <p class="mb-3">Manufacturers appear here once an admin has verified them.</p>
+                <a class="fx-btn fx-btn-primary" th:href="@{/auth/register/manufacturer}">Register your facility</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="fx-section fx-dark fx-bleed fx-passport-section">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6" data-reveal>
+                    <span class="fx-kicker">Traceability</span>
+                    <h2 class="fx-h2 text-white">Every batch gets a passport.</h2>
+                    <p class="fx-sub">Scan the QR on the box and see who made it, the material, every inspection measurement, and when it shipped. No login needed.</p>
+                    <div class="row g-4 mt-2">
+                        <div class="col-6">
+                            <div class="fx-stat"><span class="fx-num" th:attr="data-count=${verifiedCount}" th:text="${verifiedCount}">100</span><span>verified manufacturers</span></div>
+                        </div>
+                        <div class="col-6">
+                            <div class="fx-stat"><span class="fx-num" th:attr="data-count=${#lists.size(processes)}" th:text="${#lists.size(processes)}">8</span><span>manufacturing processes</span></div>
+                        </div>
+                        <div class="col-6">
+                            <div class="fx-stat"><span class="fx-num" th:attr="data-count=${materialCount}" th:text="${materialCount}">9</span><span>materials</span></div>
+                        </div>
+                        <div class="col-6">
+                            <div class="fx-stat"><span class="fx-num" data-count="100" data-suffix="%">100%</span><span>of the price shown up front</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6" data-reveal style="--d:.15s">
+                    <div class="fx-passport-wrap">
+                        <div class="fx-media fx-passport-photo">
+                            <i class="bi bi-clipboard2-check fx-media-icon"></i>
+                            <img th:src="@{/images/home/passport.jpg}" alt="Inspector measuring a part with a caliper" loading="lazy">
+                        </div>
+                        <div class="fx-passport">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <div class="small text-uppercase text-muted" style="letter-spacing: .1em">Product passport</div>
+                                    <div class="fx-display fw-bold fs-5">Example batch</div>
+                                </div>
+                                <i class="bi bi-qr-code fx-passport-qr"></i>
+                            </div>
+                            <div class="fx-pass-row"><span>Material</span><strong>Mild steel, 3 mm</strong></div>
+                            <div class="fx-pass-row"><span>Machine</span><strong>Laser cutter</strong></div>
+                            <div class="fx-pass-row"><span>Inspection</span><strong class="text-success"><i class="bi bi-patch-check-fill"></i> Approved</strong></div>
+                            <div class="fx-pass-row"><span>Status</span><strong>Shipped</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="fx-section fx-light fx-bleed">
+        <div class="container">
+            <div class="text-center mx-auto mb-5" style="max-width: 680px" data-reveal>
+                <span class="fx-kicker">Why ForgeTrace</span>
+                <h2 class="fx-h2">Built for how factories actually work.</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4" data-reveal style="--d:0s">
+                    <div class="fx-feature"><div class="fx-icon"><i class="bi bi-shield-check"></i></div><h3>Verified suppliers only</h3><p>Manufacturers are reviewed by our team before they can receive RFQs or appear in search.</p></div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-reveal style="--d:.08s">
+                    <div class="fx-feature"><div class="fx-icon"><i class="bi bi-calendar2-week"></i></div><h3>Real machine capacity</h3><p>Bookings check working hours, maintenance and existing reservations, so capacity is never double-booked.</p></div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-reveal style="--d:.16s">
+                    <div class="fx-feature"><div class="fx-icon"><i class="bi bi-rulers"></i></div><h3>Measured quality</h3><p>Inspectors record actual measurements against your tolerances, not just a tick.</p></div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-reveal style="--d:.24s">
+                    <div class="fx-feature"><div class="fx-icon"><i class="bi bi-qr-code-scan"></i></div><h3>Pay your way</h3><p>Card, UPI ID, UPI QR, net banking or wallet, with protection against double charges.</p></div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-reveal style="--d:.32s">
+                    <div class="fx-feature"><div class="fx-icon"><i class="bi bi-geo-alt"></i></div><h3>Live tracking</h3><p>Every shipment update appears on your order the moment it happens.</p></div>
+                </div>
+                <div class="col-md-6 col-lg-4" data-reveal style="--d:.4s">
+                    <div class="fx-feature"><div class="fx-icon"><i class="bi bi-exclamation-octagon"></i></div><h3>Fast recalls</h3><p>If a batch has an issue, every buyer who received it is alerted instantly.</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="fx-section-tight fx-light fx-bleed pt-0">
+        <div class="container">
+            <div class="fx-cta" data-reveal>
+                <div class="row align-items-center g-4 position-relative">
+                    <div class="col-lg-7">
+                        <h2 class="fx-h2 text-white mb-2">Ready to source your next batch?</h2>
+                        <p class="mb-0 fs-5" style="color: rgba(255,255,255,.85)">Create a free account as a buyer or a manufacturer.</p>
+                    </div>
+                    <div class="col-lg-5 d-flex flex-wrap gap-3 justify-content-lg-end">
+                        <a class="fx-btn fx-btn-light" th:href="@{/auth/register/buyer}">I need parts made</a>
+                        <a class="fx-btn fx-btn-glass" th:href="@{/auth/register/manufacturer}">I manufacture parts</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script th:src="@{/js/home.js}"></script>
+</div>
+</body>
+</html>

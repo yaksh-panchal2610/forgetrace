@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Profile &amp; company · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Profile &amp; company</h1>
+            <p class="page-subtitle">Keep your details up to date so manufacturers can deliver to the right place.</p>
+        </div>
+        <span th:replace="~{fragments/status-badge :: badge(${organization.verificationStatus})}"></span>
+    </div>
+
+    <div class="row g-4">
+        <!-- Personal details -->
+        <div class="col-xl-4">
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Your details</h2>
+                <form th:action="@{/buyer/profile}" th:object="${profileForm}" method="post" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label" for="fullName">Full name</label>
+                        <input type="text" th:field="*{fullName}" class="form-control" th:errorclass="is-invalid">
+                        <div class="invalid-feedback" th:errors="*{fullName}"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="email">Email</label>
+                        <input type="email" th:field="*{email}" class="form-control" readonly disabled>
+                        <div class="form-text text-muted-ft">Email cannot be changed.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="phone">Phone</label>
+                        <input type="tel" th:field="*{phone}" class="form-control" th:errorclass="is-invalid">
+                        <div class="invalid-feedback" th:errors="*{phone}"></div>
+                    </div>
+                    <button type="submit" class="btn btn-forge w-100">Save details</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Company -->
+        <div class="col-xl-8">
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Company</h2>
+                <form th:action="@{/buyer/profile/organization}" th:object="${orgForm}" method="post" novalidate>
+                    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                        <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="displayName">Display name</label>
+                            <input type="text" th:field="*{displayName}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{displayName}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="legalName">Legal name</label>
+                            <input type="text" th:field="*{legalName}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{legalName}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="registrationNumber">Registration no.</label>
+                            <input type="text" th:field="*{registrationNumber}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{registrationNumber}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="taxId">GSTIN</label>
+                            <input type="text" th:field="*{taxId}" class="form-control text-uppercase" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{taxId}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="email">Company email</label>
+                            <input type="email" th:field="*{email}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{email}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="phone">Company phone</label>
+                            <input type="tel" th:field="*{phone}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{phone}"></div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="addressLine1">Delivery address</label>
+                            <input type="text" th:field="*{addressLine1}" class="form-control mb-2" th:errorclass="is-invalid" placeholder="Address line 1">
+                            <input type="text" th:field="*{addressLine2}" class="form-control" th:errorclass="is-invalid" placeholder="Address line 2 (optional)">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="city">City</label>
+                            <input type="text" th:field="*{city}" class="form-control" th:errorclass="is-invalid">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="state">State</label>
+                            <input type="text" th:field="*{state}" class="form-control" th:errorclass="is-invalid">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="postalCode">PIN code</label>
+                            <input type="text" th:field="*{postalCode}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{postalCode}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="country">Country</label>
+                            <input type="text" th:field="*{country}" class="form-control" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{country}"></div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-forge px-4 mt-4">Save company</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Order · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/manufacturer/orders}" class="small"><i class="bi bi-arrow-left"></i> Orders</a>
+            <h1 class="page-title mt-1">Order <span th:text="${order.orderNumber}">ORD</span></h1>
+            <p class="page-subtitle">
+                <span th:text="${order.rfqTitle}">Item</span> · for <strong th:text="${order.buyerName}">Buyer</strong>
+            </p>
+        </div>
+        <span th:replace="~{fragments/status-badge :: badge(${order.status})}"></span>
+    </div>
+
+    <!-- Key facts -->
+    <div class="ft-card mb-4">
+        <div class="order-facts">
+            <div><div class="fact-label">Quantity</div>
+                <div class="fact-value" th:text="${order.quantity.stripTrailingZeros().toPlainString() + ' ' + order.quantityUnit}">100 pcs</div></div>
+            <div><div class="fact-label">Process / material</div>
+                <div class="fact-value" th:text="${order.processName + ' · ' + order.materialName}">CNC</div></div>
+            <div><div class="fact-label">Order value</div>
+                <div class="fact-value" th:text="${@fmt.money(order.totalAmount, order.currency)}">₹0</div></div>
+            <div><div class="fact-label">Promised lead time</div>
+                <div class="fact-value" th:text="${order.leadTimeDays + ' days'}">14 days</div></div>
+            <div><div class="fact-label">Due by</div>
+                <div class="fact-value" th:text="${@fmt.localDate(order.expectedCompletion)}">date</div></div>
+            <div><div class="fact-label">RFQ</div>
+                <div class="fact-value"><a th:href="@{/manufacturer/rfqs/{id}(id=${order.rfqId})}" th:text="${order.rfqNumber}">RFQ</a></div></div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-7">
+            <!-- Machine bookings -->
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3"><i class="bi bi-calendar-week me-2"></i>Machine bookings</h2>
+
+                <div class="table-responsive" th:if="${!#lists.isEmpty(reservations)}">
+                    <table class="table table-ft">
+                        <thead><tr><th>Machine</th><th>From</th><th>To</th><th>Status</th><th></th></tr></thead>
+                        <tbody>
+                        <tr th:each="r : ${reservations}">
+                            <td th:text="${r.machineName}">Machine</td>
+                            <td th:text="${@fmt.dateTime(r.startAt)}">start</td>
+                            <td th:text="${@fmt.dateTime(r.endAt)}">end</td>
+                            <td><span th:replace="~{fragments/status-badge :: badge(${r.status})}"></span></td>
+                            <td class="text-end">
+                                <form th:if="${r.active}" th:action="@{/manufacturer/orders/{oid}/bookings/{rid}/cancel(oid=${order.id}, rid=${r.id})}"
+                                      method="post" data-confirm="Cancel this booking and free the machine time?">
+                                    <button type="submit" class="btn btn-sm btn-ghost text-danger" title="Cancel booking"><i class="bi bi-x-lg"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="small text-muted-ft" th:if="${#lists.isEmpty(reservations)}">No machine time booked yet.</p>
+
+                <!-- Booking form -->
+                <th:block th:if="${!order.finished}">
+                    <hr class="border-secondary-subtle">
+                    <h3 class="h6 mb-3">Book machine time</h3>
+                    <div th:if="${#lists.isEmpty(machines)}" class="small text-muted-ft">
+                        No active machine supports <strong th:text="${order.processName}">CNC</strong>.
+                        <a th:href="@{/manufacturer/machines/new}">Add a machine</a> or change a machine's status to Active.
+                    </div>
+                    <form th:if="${!#lists.isEmpty(machines)}" th:action="@{/manufacturer/orders/{id}/bookings(id=${order.id})}"
+                          th:object="${bookingForm}" method="post" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label" for="machineId">Machine</label>
+                                <select th:field="*{machineId}" class="form-select">
+                                    <option th:each="m : ${machines}" th:value="${m.id}" th:text="${m.machineName + ' (' + m.machineType + ')'}">Machine</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="startAt">From (IST)</label>
+                                <input type="datetime-local" th:field="*{startAt}" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="endAt">To (IST)</label>
+                                <input type="datetime-local" th:field="*{endAt}" class="form-control">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-forge mt-3" data-loading-text="Checking availability...">
+                            <i class="bi bi-calendar-plus me-1"></i> Reserve machine
+                        </button>
+                        <p class="small text-muted-ft mt-2 mb-0">Checked against machine status, working hours, maintenance and other bookings.</p>
+                    </form>
+                </th:block>
+            </div>
+
+            <!-- Timeline -->
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3"><i class="bi bi-clock-history me-2"></i>Order timeline</h2>
+                <ul class="timeline">
+                    <li th:each="t : ${timeline}">
+                        <div class="tl-title" th:text="${t.newStatus.label}">Confirmed</div>
+                        <div class="tl-meta">
+                            <span th:text="${@fmt.dateTime(t.at)}">date</span> · <span th:text="${t.actorName}">name</span>
+                            <span th:if="${t.previousStatus != null}" th:text="${'· from ' + t.previousStatus.label}">from</span>
+                        </div>
+                        <div class="tl-note" th:if="${t.notes != null}" th:text="${t.notes}">Note</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-xl-5">
+            <!-- Status change -->
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3">Update status</h2>
+                <form th:if="${!#lists.isEmpty(nextStatuses)}" th:action="@{/manufacturer/orders/{id}/status(id=${order.id})}"
+                      th:object="${statusForm}" method="post">
+                    <label class="form-label" for="status">Move order to</label>
+                    <select th:field="*{status}" class="form-select mb-2">
+                        <option th:each="s : ${nextStatuses}" th:value="${s}" th:text="${s.label}">Scheduled</option>
+                    </select>
+                    <input type="text" th:field="*{notes}" class="form-control mb-3" maxlength="500" placeholder="Note for the buyer (optional)">
+                    <button type="submit" class="btn btn-forge w-100">Update status</button>
+                </form>
+                <p class="small text-muted-ft mb-0" th:if="${#lists.isEmpty(nextStatuses)}">
+                    No manual status change is available. Shipping and delivery are updated from shipments.
+                </p>
+                <hr class="border-secondary-subtle">
+                <p class="small text-muted-ft mb-0">
+                    <strong>Scheduled</strong> needs booked machine time.
+                    <strong>Ready to ship</strong> needs the full quantity in inspected, approved batches.
+                </p>
+            </div>
+
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-2">Deliver to</h2>
+                <p class="mb-0" style="white-space: pre-line" th:text="${order.deliveryAddress}">Address</p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

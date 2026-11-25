@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Users · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header"><div><h1 class="page-title">Users</h1>
+        <p class="page-subtitle">Suspended users cannot sign in.</p></div></div>
+    <div class="ft-card">
+        <div class="table-responsive">
+            <table class="table table-ft table-hover">
+                <thead><tr><th>Name</th><th>Organization</th><th>Roles</th><th>Last login</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="u : ${page.content}">
+                    <td><strong th:text="${u.fullName}">n</strong> <small class="text-muted-ft" th:if="${u.self}">(you)</small><br>
+                        <small class="text-muted-ft" th:text="${u.email}">e</small></td>
+                    <td th:text="${u.organizationName}">org</td>
+                    <td><small th:text="${u.roles}">BUYER</small></td>
+                    <td th:text="${u.lastLoginAt != null ? @fmt.dateTime(u.lastLoginAt) : 'Never'}">t</td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${u.status})}"></span></td>
+                    <td class="text-end">
+                        <form th:if="${!u.self and !u.admin}" class="d-inline" method="post"
+                              th:action="@{/admin/users/{id}/status(id=${u.id}, page=${page.number})}"
+                              th:attr="data-confirm=${u.status.name() == 'ACTIVE'} ? 'Suspend this user? They will not be able to sign in.' : 'Activate this user?'">
+                            <input type="hidden" name="status" th:value="${u.status.name() == 'ACTIVE'} ? 'SUSPENDED' : 'ACTIVE'">
+                            <button type="submit" class="btn btn-sm" th:classappend="${u.status.name() == 'ACTIVE'} ? 'btn-ghost' : 'btn-forge'"
+                                    th:text="${u.status.name() == 'ACTIVE'} ? 'Suspend' : 'Activate'">Suspend</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <nav th:replace="~{fragments/pagination :: pagination(${page}, '/admin/users')}"></nav>
+</div>
+</body>
+</html>

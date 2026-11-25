@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>RFQ inbox · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">RFQ inbox</h1>
+            <p class="page-subtitle">Open requests that match your processes and materials.</p>
+        </div>
+        <a class="btn btn-ghost" th:href="@{/manufacturer/profile}"><i class="bi bi-sliders me-1"></i> Edit capabilities</a>
+    </div>
+
+    <div class="banner-warn" th:if="${!verified}">
+        <i class="bi bi-hourglass-split"></i>
+        <div><strong>Waiting for verification.</strong>
+            <div class="small text-muted-ft">You will start receiving matching RFQs as soon as an admin verifies your company.</div>
+        </div>
+    </div>
+
+    <div class="ft-card">
+        <div class="table-responsive" th:if="${!#lists.isEmpty(rfqs)}">
+            <table class="table table-ft table-hover">
+                <thead>
+                <tr><th>RFQ</th><th>Buyer</th><th>Process / material</th><th>Quantity</th><th>Delivery</th><th>Quote by</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${rfqs}">
+                    <td>
+                        <a th:href="@{/manufacturer/rfqs/{id}(id=${r.id})}" th:text="${r.title}">Title</a><br>
+                        <small th:text="${r.rfqNumber}">RFQ</small>
+                    </td>
+                    <td th:text="${r.buyerName}">Buyer</td>
+                    <td><span th:text="${r.processName}">CNC</span><br><small th:text="${r.materialName}">Steel</small></td>
+                    <td th:text="${r.quantity.stripTrailingZeros().toPlainString() + ' ' + r.quantityUnit}">100 pcs</td>
+                    <td th:text="${@fmt.localDate(r.deliveryDate)}">date</td>
+                    <td>
+                        <span th:text="${@fmt.dateTime(r.quoteDeadline)}">date</span><br>
+                        <small th:text="${@fmt.timeLeft(r.quoteDeadline)}">left</small>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <span class="status-badge status-submitted me-1" th:if="${r.alreadyQuoted}">Quoted</span>
+                        <a class="btn btn-sm" th:classappend="${r.alreadyQuoted} ? 'btn-ghost' : 'btn-forge'"
+                           th:href="@{/manufacturer/rfqs/{id}/quote(id=${r.id})}"
+                           th:text="${r.alreadyQuoted} ? 'Revise' : 'Quote'">Quote</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${#lists.isEmpty(rfqs) and verified}"><div th:replace="~{fragments/empty-state :: empty('bi-inbox', 'No matching RFQs right now', 'New RFQs for your processes and materials will appear here, and you will get a notification.', null, null)}"></div></th:block>
+        <th:block th:if="${#lists.isEmpty(rfqs) and !verified}"><div th:replace="~{fragments/empty-state :: empty('bi-shield-lock', 'Inbox locked', 'RFQs are only shared with verified manufacturers.', '/manufacturer/profile', 'Complete your profile')}"></div></th:block>
+    </div>
+</div>
+</body>
+</html>

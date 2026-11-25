@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Recall · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/admin/recalls}" class="small"><i class="bi bi-arrow-left"></i> Recalls</a>
+            <h1 class="page-title mt-1">Recall of <span th:text="${r.batchNumber}">BAT</span></h1>
+            <p class="page-subtitle" th:text="${r.manufacturerName + ' · order ' + r.orderNumber + ' · issued by ' + r.initiatedBy}">who</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <span th:replace="~{fragments/status-badge :: badge(${r.severity})}"></span>
+            <span th:replace="~{fragments/status-badge :: badge(${r.status})}"></span>
+            <form th:if="${r.open}" th:action="@{/admin/recalls/{id}/close(id=${r.id})}" method="post" data-confirm="Close this recall?">
+                <button class="btn btn-ghost" type="submit">Close recall</button>
+            </form>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-2">Reason</h2>
+                <p class="mb-2" style="white-space: pre-line" th:text="${r.reason}">reason</p>
+                <small class="text-muted-ft" th:text="${'Issued ' + @fmt.dateTime(r.createdAt)}">d</small>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Recipients</h2>
+                <table class="table table-ft table-sm mb-0">
+                    <thead><tr><th>Organization</th><th>Notified</th><th>Acknowledged</th></tr></thead>
+                    <tbody>
+                    <tr th:each="x : ${r.recipients}">
+                        <td th:text="${x.organizationName}">o</td>
+                        <td th:text="${x.notifiedAt != null ? @fmt.dateTime(x.notifiedAt) : '—'}">d</td>
+                        <td><span th:replace="~{fragments/status-badge :: badge(${x.status})}"></span>
+                            <small class="d-block text-muted-ft" th:if="${x.acknowledgedAt != null}" th:text="${@fmt.dateTime(x.acknowledgedAt)}">d</small></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

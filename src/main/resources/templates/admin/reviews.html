@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Reviews · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header"><div><h1 class="page-title">Reviews</h1>
+        <p class="page-subtitle">Only buyers with a completed order can review. Remove abusive content here.</p></div></div>
+    <div class="ft-card">
+        <div class="table-responsive" th:if="${!page.isEmpty()}">
+            <table class="table table-ft table-hover">
+                <thead><tr><th>Rating</th><th>Manufacturer</th><th>Buyer</th><th>Comment</th><th>Date</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="r : ${page.content}">
+                    <td class="stars text-nowrap" th:text="${#strings.repeat('★', r.rating)}">★★★★★</td>
+                    <td th:text="${r.manufacturerName}">m</td>
+                    <td><span th:text="${r.buyerName}">b</span><br><small class="text-muted-ft" th:text="${r.orderNumber}">ORD</small></td>
+                    <td th:text="${r.comment} ?: '—'">c</td>
+                    <td th:text="${@fmt.date(r.createdAt)}">d</td>
+                    <td class="text-end">
+                        <form th:action="@{/admin/reviews/{id}/delete(id=${r.id})}" method="post" data-confirm="Remove this review?">
+                            <button class="btn btn-sm btn-ghost" type="submit"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${page.isEmpty()}"><div th:replace="~{fragments/empty-state :: empty('bi-star', 'No reviews yet', 'Reviews appear when buyers rate completed orders.', null, null)}"></div></th:block>
+    </div>
+    <nav th:replace="~{fragments/pagination :: pagination(${page}, '/admin/reviews')}"></nav>
+</div>
+</body>
+</html>

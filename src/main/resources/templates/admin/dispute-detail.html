@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Dispute · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/admin/disputes}" class="small"><i class="bi bi-arrow-left"></i> Disputes</a>
+            <h1 class="page-title mt-1" th:text="${d.reason}">Reason</h1>
+            <p class="page-subtitle" th:text="${'Order ' + d.orderNumber + ' · ' + d.buyerName + ' → ' + d.manufacturerName}">who</p>
+        </div>
+        <span th:replace="~{fragments/status-badge :: badge(${d.status})}"></span>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-2">Buyer's description</h2>
+                <p class="mb-2" style="white-space: pre-line" th:text="${d.description} ?: 'No description given.'">d</p>
+                <small class="text-muted-ft" th:text="${'Opened by ' + d.openedBy + ' · ' + @fmt.dateTime(d.createdAt)}">who</small>
+            </div>
+            <div class="ft-card" th:if="${d.resolution != null}">
+                <h2 class="ft-card-title mb-2">Resolution</h2>
+                <p class="mb-2" style="white-space: pre-line" th:text="${d.resolution}">r</p>
+                <small class="text-muted-ft" th:text="${(d.resolvedBy ?: '') + ' · ' + (d.resolvedAt != null ? @fmt.dateTime(d.resolvedAt) : '')}">who</small>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <form class="ft-card" th:if="${!#lists.isEmpty(nextStatuses)}" th:action="@{/admin/disputes/{id}/status(id=${d.id})}" method="post">
+                <h2 class="ft-card-title mb-3">Update</h2>
+                <label class="form-label" for="status">New status</label>
+                <select id="status" name="status" class="form-select mb-3">
+                    <option th:each="s : ${nextStatuses}" th:value="${s}" th:text="${s.label}">Resolved</option>
+                </select>
+                <label class="form-label" for="resolution">Resolution (required to resolve or reject)</label>
+                <textarea id="resolution" name="resolution" rows="4" class="form-control mb-3"
+                          placeholder="e.g. Manufacturer agreed to replace 20 pcs at no cost."></textarea>
+                <button type="submit" class="btn btn-forge w-100">Save</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

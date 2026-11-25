@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Record inspection · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/inspector/batches/{id}(id=${batch.id})}" class="small"><i class="bi bi-arrow-left"></i> Batch <span th:text="${batch.batchNumber}">BAT</span></a>
+            <h1 class="page-title mt-1">Record inspection</h1>
+            <p class="page-subtitle" th:text="${batch.itemTitle + ' · ' + batch.quantity.stripTrailingZeros().toPlainString() + ' ' + batch.quantityUnit}">Item</p>
+        </div>
+    </div>
+
+    <form th:action="@{/inspector/batches/{id}/inspect(id=${batch.id})}" th:object="${form}" method="post" novalidate>
+        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+            <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+        </div>
+
+        <div class="ft-card mb-4">
+            <div class="ft-card-header mb-2">
+                <h2 class="ft-card-title">Measurements</h2>
+                <button type="button" class="btn btn-sm btn-ghost" id="addMeasurement"><i class="bi bi-plus-lg"></i> Add row</button>
+            </div>
+            <p class="small text-muted-ft">Each value is checked against min and max automatically. Any failure blocks approval.</p>
+            <div class="table-responsive">
+                <table class="table table-ft table-sm">
+                    <thead><tr><th>Parameter</th><th>Min</th><th>Max</th><th>Actual</th><th>Unit</th><th>Remarks</th></tr></thead>
+                    <tbody id="measurementRows">
+                    <tr th:each="m, s : *{measurements}">
+                        <td><input type="text" class="form-control form-control-sm" th:field="*{measurements[__${s.index}__].parameterName}" placeholder="e.g. Bore diameter"></td>
+                        <td><input type="number" step="any" class="form-control form-control-sm" th:field="*{measurements[__${s.index}__].expectedMin}"></td>
+                        <td><input type="number" step="any" class="form-control form-control-sm" th:field="*{measurements[__${s.index}__].expectedMax}"></td>
+                        <td><input type="number" step="any" class="form-control form-control-sm" th:field="*{measurements[__${s.index}__].actualValue}"></td>
+                        <td><input type="text" class="form-control form-control-sm" th:field="*{measurements[__${s.index}__].unit}" placeholder="mm"></td>
+                        <td><input type="text" class="form-control form-control-sm" th:field="*{measurements[__${s.index}__].remarks}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="ft-card">
+                    <label class="form-label" for="findings">Findings</label>
+                    <textarea th:field="*{findings}" rows="4" class="form-control" placeholder="Visual check, surface finish, packaging..."></textarea>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="ft-card">
+                    <label class="form-label" for="inspectionType">Inspection type</label>
+                    <select th:field="*{inspectionType}" class="form-select mb-3">
+                        <option th:each="t : ${types}" th:value="${t}" th:text="${t.label}">Final</option>
+                    </select>
+                    <label class="form-label">Decision</label>
+                    <div class="mb-3">
+                        <div class="form-check" th:each="d : ${decisions}">
+                            <input class="form-check-input" type="radio" th:field="*{decision}" th:value="${d}">
+                            <label class="form-check-label" th:for="${#ids.prev('decision')}"
+                                   th:text="${d.name() == 'PASSED' ? 'Approve batch' : (d.name() == 'FAILED' ? 'Reject batch' : 'Put on hold')}">Approve</label>
+                        </div>
+                        <div class="text-danger small" th:if="${#fields.hasErrors('decision')}" th:errors="*{decision}"></div>
+                    </div>
+                    <button type="submit" class="btn btn-forge w-100" data-loading-text="Saving...">Save inspection</button>
+                    <p class="small text-muted-ft mt-2 mb-0">Approving creates the batch's public QR passport.</p>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        (function () {
+            const body = document.getElementById('measurementRows');
+            document.getElementById('addMeasurement').addEventListener('click', function () {
+                const i = body.rows.length;
+                if (i >= 30) return;
+                const fields = ['parameterName', 'expectedMin', 'expectedMax', 'actualValue', 'unit', 'remarks'];
+                const tr = document.createElement('tr');
+                fields.forEach(function (f) {
+                    const td = document.createElement('td');
+                    const input = document.createElement('input');
+                    input.className = 'form-control form-control-sm';
+                    input.name = 'measurements[' + i + '].' + f;
+                    input.type = ['expectedMin', 'expectedMax', 'actualValue'].includes(f) ? 'number' : 'text';
+                    if (input.type === 'number') input.step = 'any';
+                    td.appendChild(input);
+                    tr.appendChild(td);
+                });
+                body.appendChild(tr);
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>

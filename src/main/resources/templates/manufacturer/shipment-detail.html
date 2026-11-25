@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Shipment · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/manufacturer/shipments}" class="small"><i class="bi bi-arrow-left"></i> Shipments</a>
+            <h1 class="page-title mt-1" th:text="${'Shipment for ' + s.orderNumber}">Shipment</h1>
+            <p class="page-subtitle" th:text="${s.itemTitle + ' · ' + s.buyerName}">Item</p>
+        </div>
+        <span th:replace="~{fragments/status-badge :: badge(${s.status})}"></span>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-7">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3">Timeline</h2>
+                <ul class="ship-events">
+                    <li th:each="e : ${s.events}">
+                        <strong th:text="${e.status.label}">Dispatched</strong>
+                        <small class="text-muted-ft ms-2" th:text="${@fmt.dateTime(e.time)}">date</small>
+                        <div class="small" th:if="${e.location != null}"><i class="bi bi-geo-alt"></i> <span th:text="${e.location}">loc</span></div>
+                        <div class="small text-muted-ft" th:if="${e.remarks != null}" th:text="${e.remarks}">remarks</div>
+                    </li>
+                </ul>
+            </div>
+
+            <form th:if="${s.open}" class="ft-card" th:action="@{/manufacturer/shipments/{id}/events(id=${s.id})}"
+                  th:object="${eventForm}" method="post">
+                <h2 class="ft-card-title mb-3">Add update</h2>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="status">Status</label>
+                        <select th:field="*{status}" class="form-select">
+                            <option th:each="st : ${eventStatuses}" th:value="${st}" th:text="${st.label}">In transit</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label" for="location">Location</label>
+                        <input type="text" th:field="*{location}" class="form-control" placeholder="e.g. Pune hub">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="remarks">Remarks</label>
+                        <input type="text" th:field="*{remarks}" class="form-control">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-forge mt-3" data-confirm="Save this shipment update? 'Delivered' cannot be undone.">Save update</button>
+            </form>
+        </div>
+
+        <div class="col-xl-5">
+            <div class="ft-card mb-4">
+                <dl class="detail-list mb-0">
+                    <dt>Carrier</dt><dd th:text="${s.carrierName}">Carrier</dd>
+                    <dt>Tracking</dt><dd th:text="${s.trackingNumber} ?: '—'">AWB</dd>
+                    <dt>Dispatched</dt><dd th:text="${@fmt.localDate(s.dispatchDate)}">date</dd>
+                    <dt>Expected</dt><dd th:text="${s.expectedDelivery != null ? @fmt.localDate(s.expectedDelivery) : '—'}">date</dd>
+                    <dt>Delivered</dt><dd th:text="${s.deliveredAt != null ? @fmt.dateTime(s.deliveredAt) : '—'}">date</dd>
+                    <dt>Total quantity</dt><dd th:text="${s.totalQuantity.stripTrailingZeros().toPlainString() + ' ' + s.quantityUnit}">50</dd>
+                </dl>
+            </div>
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Batches</h2>
+                <table class="table table-ft table-sm mb-0">
+                    <tr th:each="b : ${s.batches}">
+                        <td th:text="${b.batchNumber}">BAT</td>
+                        <td th:text="${b.quantity.stripTrailingZeros().toPlainString()}">50</td>
+                        <td class="text-end"><a th:if="${b.hasPassport}" th:href="@{/p/{t}(t=${b.passportToken})}" target="_blank"><i class="bi bi-qr-code"></i></a></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

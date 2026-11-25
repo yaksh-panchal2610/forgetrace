@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Review · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/buyer/orders/{id}(id=${target.orderId})}" class="small"><i class="bi bi-arrow-left"></i> Order <span th:text="${target.orderNumber}">ORD</span></a>
+            <h1 class="page-title mt-1" th:text="${'Review ' + target.manufacturerName}">Review</h1>
+            <p class="page-subtitle" th:text="${target.itemTitle}">Item</p>
+        </div>
+    </div>
+    <form class="ft-card" style="max-width: 640px;" th:action="@{/buyer/orders/{id}/review(id=${target.orderId})}" th:object="${form}" method="post">
+        <label class="form-label">Rating</label>
+        <div class="rating-pick mb-1">
+            <label th:each="n : ${#numbers.sequence(1, 5)}">
+                <input type="radio" class="d-none" th:field="*{rating}" th:value="${n}">
+                <span th:text="${n + ' ★'}">1 ★</span>
+            </label>
+        </div>
+        <div class="text-danger small mb-2" th:if="${#fields.hasErrors('rating')}" th:errors="*{rating}"></div>
+        <label class="form-label mt-2" for="comment">Comment (optional)</label>
+        <textarea th:field="*{comment}" rows="4" class="form-control mb-3" placeholder="Quality, communication, delivery time..."></textarea>
+        <button type="submit" class="btn btn-forge">Publish review</button>
+        <p class="small text-muted-ft mt-2 mb-0">Shown as a verified purchase. One review per order.</p>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,30 @@
+# Build output
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Secrets - never commit
+.env
+*.pem
+*.key
+
+# Runtime files
+logs/
+*.log
+uploads/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+uploads/
+exports/
+
+logs/
+deploy/.env
+*.pem

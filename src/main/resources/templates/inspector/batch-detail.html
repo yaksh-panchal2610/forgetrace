@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Batch · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/inspector/queue}" class="small"><i class="bi bi-arrow-left"></i> Queue</a>
+            <h1 class="page-title mt-1">Batch <span th:text="${batch.batchNumber}">BAT</span></h1>
+            <p class="page-subtitle" th:text="${batch.manufacturerName + ' · order ' + batch.orderNumber}">Mfr</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <span th:replace="~{fragments/status-badge :: badge(${batch.status})}"></span>
+            <a th:if="${batch.inspectable}" class="btn btn-forge" th:href="@{/inspector/batches/{id}/inspect(id=${batch.id})}">
+                <i class="bi bi-clipboard-plus me-1"></i> Record inspection</a>
+            <a th:if="${batch.hasPassport}" class="btn btn-ghost" th:href="@{/p/{t}(t=${batch.passportToken})}" target="_blank">
+                <i class="bi bi-qr-code"></i> Passport</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-7">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3">Inspections</h2>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(inspections)}">
+                    <table class="table table-ft">
+                        <thead><tr><th>Date</th><th>Type</th><th>Inspector</th><th>Measurements</th><th>Result</th><th></th></tr></thead>
+                        <tbody>
+                        <tr th:each="i : ${inspections}">
+                            <td th:text="${@fmt.dateTime(i.inspectedAt)}">date</td>
+                            <td th:text="${i.type.label}">Final</td>
+                            <td th:text="${i.inspectorName}">Name</td>
+                            <td><span th:text="${#lists.size(i.measurements)}">3</span>
+                                <small class="measure-fail" th:if="${i.failedCount > 0}" th:text="${'(' + i.failedCount + ' failed)'}">(1 failed)</small></td>
+                            <td><span th:replace="~{fragments/status-badge :: badge(${i.status})}"></span></td>
+                            <td class="text-end"><a class="btn btn-sm btn-ghost" th:href="@{/inspector/inspections/{id}(id=${i.id})}">View</a></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="small text-muted-ft mb-0" th:if="${#lists.isEmpty(inspections)}">No inspection recorded yet.</p>
+            </div>
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Buyer requirements</h2>
+                <dl class="row detail-list mb-0">
+                    <dt class="col-sm-3">Item</dt><dd class="col-sm-9" th:text="${rfq.title}">Item</dd>
+                    <dt class="col-sm-3">Process / material</dt><dd class="col-sm-9" th:text="${rfq.processName + ' · ' + rfq.materialName}">CNC</dd>
+                    <th:block th:if="${!#lists.isEmpty(rfq.specifications)}">
+                        <dt class="col-sm-3">Specifications</dt>
+                        <dd class="col-sm-9">
+                            <table class="table table-ft table-sm mb-0">
+                                <tr th:each="s : ${rfq.specifications}"><td class="text-muted-ft" style="width:40%" th:text="${s.name}">n</td><td th:text="${s.value}">v</td></tr>
+                            </table>
+                        </dd>
+                    </th:block>
+                    <dt class="col-sm-3">Tolerances</dt><dd class="col-sm-9" th:text="${rfq.toleranceNotes} ?: '—'">t</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="col-xl-5">
+            <div class="ft-card mb-4">
+                <dl class="detail-list mb-0">
+                    <dt>Quantity</dt><dd th:text="${batch.quantity.stripTrailingZeros().toPlainString() + ' ' + batch.quantityUnit}">50</dd>
+                    <dt>Manufactured</dt><dd th:text="${@fmt.localDate(batch.manufactureDate)}">date</dd>
+                    <dt>Buyer</dt><dd th:text="${batch.buyerName}">Buyer</dd>
+                </dl>
+            </div>
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Drawings</h2>
+                <a th:each="a : ${rfq.attachments}" class="file-link" th:href="@{/files/{id}(id=${a.fileId})}">
+                    <i class="bi bi-file-earmark-arrow-down text-info"></i>
+                    <span class="flex-grow-1 text-truncate" th:text="${a.filename}">file</span>
+                </a>
+                <p class="small text-muted-ft mb-0" th:if="${#lists.isEmpty(rfq.attachments)}">No drawings attached.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

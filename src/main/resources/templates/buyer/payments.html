@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Payments · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header"><div><h1 class="page-title">Payments</h1>
+        <p class="page-subtitle">All payment attempts for your orders.</p></div></div>
+    <div class="ft-card">
+        <div class="table-responsive" th:if="${!page.isEmpty()}">
+            <table class="table table-ft table-hover">
+                <thead><tr><th>Reference</th><th>Order</th><th>Manufacturer</th><th>Method</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${page.content}">
+                    <td th:text="${p.reference}">PAY</td>
+                    <td><a th:href="@{/buyer/orders/{id}/tracking(id=${p.orderId})}" th:text="${p.orderNumber}">ORD</a></td>
+                    <td th:text="${p.manufacturerName}">Mfr</td>
+                    <td th:text="${p.method.label}">Card</td>
+                    <td th:text="${@fmt.money(p.amount, p.currency)}">₹</td>
+                    <td th:text="${@fmt.dateTime(p.createdAt)}">date</td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${p.status})}"></span>
+                        <small class="d-block measure-fail" th:if="${p.failureReason != null}" th:text="${p.failureReason}">r</small></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${page.isEmpty()}"><div th:replace="~{fragments/empty-state :: empty('bi-credit-card', 'No payments yet', 'Pay for an order from its detail page.', '/buyer/orders', 'Open orders')}"></div></th:block>
+    </div>
+    <nav th:replace="~{fragments/pagination :: pagination(${page}, '/buyer/payments')}"></nav>
+</div>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--
+  Usage:
+  <div th:replace="~{fragments/empty-state :: empty('bi-inbox', 'No RFQs yet', 'Create your first RFQ.', '/buyer/rfqs/new', 'New RFQ')}"></div>
+  Pass null for href and label when there is no button.
+-->
+<div th:fragment="empty(icon, title, text, href, label)" class="empty-state">
+    <i class="bi" th:classappend="${icon}"></i>
+    <h3 th:text="${title}">Nothing here yet</h3>
+    <p class="mb-3" th:text="${text}">Description</p>
+    <a th:if="${href != null}" class="btn btn-forge btn-sm" th:href="@{${href}}" th:text="${label}">Action</a>
+</div>
+</html>

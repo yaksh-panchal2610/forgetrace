@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--
+  Usage (inside a form with enctype="multipart/form-data"):
+  <div th:replace="~{fragments/file-upload :: upload('file', 'Drawing', '.pdf,.png,.jpg,.dxf,.step', 'PDF, image or CAD file. Max 10 MB.')}"></div>
+-->
+<div th:fragment="upload(name, label, accept, help)" class="mb-3">
+    <label class="form-label" th:for="${name}" th:text="${label}">File</label>
+    <input class="form-control" type="file" th:id="${name}" th:name="${name}" th:attr="accept=${accept}">
+    <div class="form-text text-muted-ft" th:if="${help != null}" th:text="${help}">Help text</div>
+</div>
+</html>

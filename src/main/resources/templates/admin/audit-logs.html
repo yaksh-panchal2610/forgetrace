@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Audit log · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div><h1 class="page-title">Audit log</h1><p class="page-subtitle">Permanent record of important actions. Rows are never edited or deleted.</p></div>
+        <form class="d-flex gap-2 align-items-end" th:action="@{/admin/reports/audit-export}" method="post">
+            <input type="date" name="from" class="form-control form-control-sm" th:value="${defaultFrom}" aria-label="From">
+            <input type="date" name="to" class="form-control form-control-sm" th:value="${defaultTo}" aria-label="To">
+            <button type="submit" class="btn btn-sm btn-forge text-nowrap"><i class="bi bi-download"></i> Export CSV</button>
+        </form>
+    </div>
+    <div class="ft-card">
+        <div class="table-responsive">
+            <table class="table table-ft table-sm">
+                <thead><tr><th>Time</th><th>Who</th><th>Action</th><th>Entity</th><th>Details</th><th>IP</th></tr></thead>
+                <tbody>
+                <tr th:each="a : ${page.content}">
+                    <td class="text-nowrap" th:text="${@fmt.dateTime(a.time)}">t</td>
+                    <td th:text="${a.actor}">who</td>
+                    <td><code th:text="${a.action}">A</code></td>
+                    <td th:text="${a.entityType + (a.entityId != null ? ' #' + a.entityId : '')}">E</td>
+                    <td class="text-truncate" style="max-width: 320px" th:text="${a.details} ?: ''" th:title="${a.details}">d</td>
+                    <td><small th:text="${a.ipAddress} ?: ''">ip</small></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <nav th:replace="~{fragments/pagination :: pagination(${page}, '/admin/audit-logs')}"></nav>
+</div>
+</body>
+</html>

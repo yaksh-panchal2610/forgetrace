@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Notifications · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Notifications</h1>
+            <p class="page-subtitle">Updates about your RFQs, quotations, orders and inspections.</p>
+        </div>
+        <form th:if="${unreadNotifications > 0}" th:action="@{/notifications/read-all}" method="post">
+            <button type="submit" class="btn btn-ghost"><i class="bi bi-check2-all me-1"></i> Mark all as read</button>
+        </form>
+    </div>
+
+    <div class="ft-card p-0">
+        <div th:if="${!page.isEmpty()}">
+            <a th:each="n : ${page.content}" th:href="@{/notifications/{id}/open(id=${n.id})}"
+               class="notification-row" th:classappend="${n.read} ? '' : 'unread'">
+                <span class="notification-dot" aria-hidden="true"></span>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="d-flex justify-content-between gap-3">
+                        <strong th:text="${n.title}">Title</strong>
+                        <small class="text-muted-ft text-nowrap" th:text="${@fmt.dateTime(n.createdAt)}">date</small>
+                    </div>
+                    <div class="small text-muted-ft" th:text="${n.message}">Message</div>
+                </div>
+            </a>
+        </div>
+        <th:block th:if="${page.isEmpty()}"><div th:replace="~{fragments/empty-state :: empty('bi-bell', 'No notifications yet', 'You will be notified about new RFQs, quotations and order updates here.', null, null)}"></div></th:block>
+    </div>
+
+    <nav th:replace="~{fragments/pagination :: pagination(${page}, '/notifications')}"></nav>
+</div>
+</body>
+</html>

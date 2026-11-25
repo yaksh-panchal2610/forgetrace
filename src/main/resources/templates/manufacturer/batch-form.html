@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>New batch · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/manufacturer/batches}" class="small"><i class="bi bi-arrow-left"></i> Batches</a>
+            <h1 class="page-title mt-1">New batch</h1>
+            <p class="page-subtitle">Only orders that are in production or quality check can have batches.</p>
+        </div>
+    </div>
+
+    <div class="ft-card" style="max-width: 640px;">
+        <th:block th:if="${#lists.isEmpty(orders)}"><div th:replace="~{fragments/empty-state :: empty('bi-box-seam', 'No order is ready for batches', 'Move an order to In production first.', '/manufacturer/orders', 'Open orders')}"></div></th:block>
+
+        <form th:if="${!#lists.isEmpty(orders)}" th:action="@{/manufacturer/batches}" th:object="${form}" method="post" novalidate>
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="orderId">Order</label>
+                <select th:field="*{orderId}" class="form-select" th:errorclass="is-invalid">
+                    <option th:each="o : ${orders}" th:value="${o.id}"
+                            th:text="${o.orderNumber + ' · ' + o.title + ' (remaining ' + o.remaining.stripTrailingZeros().toPlainString() + ' ' + o.unit + ')'}">ORD</option>
+                </select>
+                <div class="invalid-feedback" th:errors="*{orderId}"></div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="quantity">Quantity</label>
+                    <input type="number" step="any" min="0" th:field="*{quantity}" class="form-control" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:errors="*{quantity}"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="manufactureDate">Manufacture date</label>
+                    <input type="date" th:field="*{manufactureDate}" class="form-control" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:errors="*{manufactureDate}"></div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-forge px-4 mt-4">Create batch</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

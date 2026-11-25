@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Payment | ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/buyer/orders/{id}(id=${checkout.orderId})}" class="small"><i class="bi bi-arrow-left"></i> Order <span th:text="${checkout.orderNumber}">ORD</span></a>
+            <h1 class="page-title mt-1">Payment</h1>
+            <p class="page-subtitle" th:text="${checkout.itemTitle + ' | ' + checkout.manufacturerName}">Item</p>
+        </div>
+        <a class="btn btn-ghost" th:href="@{/buyer/orders/{id}/tracking(id=${checkout.orderId})}"><i class="bi bi-truck me-1"></i> Tracking</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="ft-card" th:if="${checkout.paid}">
+                <h2 class="ft-card-title mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i> This order is paid</h2>
+                <p class="mb-0 text-muted-ft">You can follow the delivery on the tracking page.</p>
+            </div>
+
+            <div class="ft-card" th:if="${!checkout.paid and !checkout.payable}">
+                <h2 class="ft-card-title mb-2">Payment not available</h2>
+                <p class="mb-0 text-muted-ft">This order was cancelled.</p>
+            </div>
+
+            <form th:if="${checkout.payable}" id="paymentForm" class="ft-card"
+                  th:action="@{/buyer/orders/{id}/pay(id=${checkout.orderId})}" th:object="${form}" method="post" novalidate>
+                <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
+                    <p class="mb-0" th:each="err : ${#fields.allErrors()}" th:text="${err}">Error</p>
+                </div>
+                <input type="hidden" th:field="*{idempotencyKey}">
+
+                <label class="form-label">Payment method</label>
+                <div class="row g-2 mb-3">
+                    <div class="col-sm-6" th:each="m : ${methods}">
+                        <label class="pay-method w-100">
+                            <input type="radio" th:field="*{method}" th:value="${m}">
+                            <span th:text="${m.label}">Card</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div data-method-panel="CARD" class="mb-3">
+                    <label class="form-label" for="cardNumber">Card number</label>
+                    <input type="text" id="cardNumber" class="form-control" th:field="*{cardNumber}"
+                           inputmode="numeric" autocomplete="off" placeholder="4111 1111 1111 1111">
+                </div>
+
+                <div data-method-panel="UPI" class="mb-3">
+                    <div class="btn-group w-100 mb-3" role="group">
+                        <button type="button" class="btn btn-outline-secondary active" data-upi-mode="qr"><i class="bi bi-qr-code me-1"></i> Scan QR</button>
+                        <button type="button" class="btn btn-outline-secondary" data-upi-mode="id"><i class="bi bi-at me-1"></i> Enter UPI ID</button>
+                    </div>
+
+                    <div id="upiQrBox" class="text-center">
+                        <div class="d-inline-block p-2 bg-white border rounded">
+                            <img id="upiQrImage" width="240" height="240" alt="UPI QR code for this order"
+                                 th:attr="data-src=@{/buyer/orders/{id}/upi-qr.png(id=${checkout.orderId})}">
+                        </div>
+                        <p class="fs-5 fw-semibold mt-2 mb-0" th:text="${@fmt.money(checkout.amount, checkout.currency)}">0</p>
+                        <p class="small text-muted-ft mb-1">
+                            Pay to <code th:text="${upiPayee}">payee@bank</code> for order <span th:text="${checkout.orderNumber}">ORD</span>
+                        </p>
+                        <p class="small mb-2">
+                            <span id="qrTimerText">QR valid for <strong id="qrTimer">05:00</strong></span>
+                            <span id="qrExpiredText" class="text-danger d-none">This QR has expired.</span>
+                            <button type="button" id="qrRefresh" class="btn btn-link btn-sm p-0 ms-2"><i class="bi bi-arrow-clockwise"></i> Make new QR</button>
+                        </p>
+                        <ol class="small text-muted-ft text-start mx-auto mb-3" style="max-width: 320px">
+                            <li>Open any UPI app and scan the QR.</li>
+                            <li>Check the amount and approve the payment.</li>
+                            <li>Come back here and press <strong>I've paid</strong>.</li>
+                        </ol>
+                        <button type="submit" class="btn btn-forge w-100 mb-2" data-qr-result="qr.paid@okbank" data-loading-text="Confirming...">
+                            <i class="bi bi-check2-circle me-1"></i> I've paid
+                        </button>
+                        <button type="submit" class="btn btn-link btn-sm text-danger" data-qr-result="fail.qr@okbank">Simulate failed payment</button>
+                    </div>
+
+                    <div id="upiIdBox" class="d-none">
+                        <label class="form-label" for="upiId">UPI ID</label>
+                        <input type="text" id="upiId" class="form-control" th:field="*{upiId}" autocomplete="off" placeholder="name@okbank">
+                    </div>
+                </div>
+
+                <div data-method-panel="NET_BANKING" class="mb-3 small text-muted-ft">You would be redirected to your bank. In sandbox mode it is approved instantly.</div>
+                <div data-method-panel="WALLET" class="mb-3 small text-muted-ft">In sandbox mode the wallet payment is approved instantly.</div>
+
+                <div class="sandbox-note mb-3">
+                    <strong><i class="bi bi-cone-striped"></i> Sandbox mode, no real money moves.</strong><br>
+                    Approved card: <button type="button" class="btn btn-link btn-sm p-0" data-target="cardNumber" data-fill="4111 1111 1111 1111">4111 1111 1111 1111</button><br>
+                    Declined card: <button type="button" class="btn btn-link btn-sm p-0" data-target="cardNumber" data-fill="4000 0000 0000 0002">4000 0000 0000 0002</button><br>
+                    UPI: <code>success@okbank</code> is approved, <code>fail@okbank</code> is declined.<br>
+                    UPI QR: do not approve the payment in a real UPI app; press <strong>I've paid</strong> instead.
+                </div>
+
+                <button type="submit" id="mainPayButton" class="btn btn-forge w-100" data-loading-text="Processing..."
+                        th:text="${'Pay ' + @fmt.money(checkout.amount, checkout.currency)}">Pay</button>
+                <p class="small text-muted-ft mt-2 mb-0">Card numbers are never stored by ForgeTrace.</p>
+            </form>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3">Order summary</h2>
+                <dl class="detail-list mb-0">
+                    <dt>Order</dt><dd th:text="${checkout.orderNumber}">ORD</dd>
+                    <dt>Item</dt><dd th:text="${checkout.itemTitle}">Item</dd>
+                    <dt>Manufacturer</dt><dd th:text="${checkout.manufacturerName}">Mfr</dd>
+                    <dt>Quantity</dt><dd th:text="${checkout.quantity.stripTrailingZeros().toPlainString() + ' ' + checkout.quantityUnit}">50</dd>
+                    <dt>Order status</dt><dd><span th:replace="~{fragments/status-badge :: badge(${checkout.orderStatus})}"></span></dd>
+                    <dt>Total (incl. tax)</dt><dd class="fs-5 fw-semibold" th:text="${@fmt.money(checkout.amount, checkout.currency)}">0</dd>
+                </dl>
+            </div>
+
+            <div class="ft-card" th:if="${!#lists.isEmpty(checkout.payments)}">
+                <h2 class="ft-card-title mb-3">Attempts</h2>
+                <table class="table table-ft table-sm mb-0">
+                    <tr th:each="p : ${checkout.payments}">
+                        <td><span th:text="${p.reference}">PAY</span><br><small class="text-muted-ft" th:text="${@fmt.dateTime(p.createdAt)}">date</small></td>
+                        <td th:text="${p.method.label}">Card</td>
+                        <td class="text-end">
+                            <span th:replace="~{fragments/status-badge :: badge(${p.status})}"></span>
+                            <br th:if="${p.failureReason != null}"><small class="measure-fail" th:if="${p.failureReason != null}" th:text="${p.failureReason}">reason</small>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script th:src="@{/js/payment-checkout.js}"></script>
+</div>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/public :: layout(~{::title}, ~{::content})}">
+<head><title>Privacy notice · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <section class="section pt-5">
+        <div class="container content-page">
+            <span class="eyebrow">Legal</span>
+            <h1 class="section-title">Privacy notice</h1>
+            <p class="legal-note">
+                Prototype document prepared for a university project. It must be reviewed by a qualified legal
+                advisor (for example against India's Digital Personal Data Protection Act, 2023) before commercial use.
+            </p>
+
+            <h2>1. What we collect</h2>
+            <ul>
+                <li><strong>Account data:</strong> name, work email, phone number (optional) and a securely hashed password.</li>
+                <li><strong>Company data:</strong> company name, address, registration number and GSTIN (optional).</li>
+                <li><strong>Business records:</strong> RFQs, drawings you upload, quotations, orders, batches, inspections, payments (test mode) and shipments.</li>
+                <li><strong>Technical data:</strong> login times and IP addresses recorded in our audit log for security.</li>
+            </ul>
+
+            <h2>2. Why we use it</h2>
+            <ul>
+                <li>To run your account and the sourcing, production and traceability features you use.</li>
+                <li>To verify manufacturers before they appear to buyers.</li>
+                <li>To keep the platform secure and investigate misuse.</li>
+                <li>To reply to messages sent through the contact form.</li>
+            </ul>
+            <p>We do not sell personal data and we do not use it for advertising profiles.</p>
+
+            <h2>3. Who can see it</h2>
+            <ul>
+                <li>Buyers see the public profile of verified manufacturers.</li>
+                <li>Manufacturers see the RFQs that match their capabilities, including attached drawings.</li>
+                <li>A product passport shows only approved public batch information - never personal details or private drawings.</li>
+                <li>Platform administrators can access records to verify, support and secure the service.</li>
+            </ul>
+
+            <h2>4. How we protect it</h2>
+            <ul>
+                <li>Passwords are stored as BCrypt hashes, never in plain text.</li>
+                <li>Data is encrypted in transit (HTTPS) and at rest on the cloud database and storage.</li>
+                <li>Access is restricted by role and by organization on the server.</li>
+            </ul>
+
+            <h2>5. How long we keep it</h2>
+            <p>
+                Account data is kept while your account is active. Financial, audit and traceability records are kept
+                for the period required for legal and quality purposes, even after an account is closed.
+            </p>
+
+            <h2>6. Your choices</h2>
+            <p>
+                You can view and update your details on your profile page. To request a copy of your data or to close
+                your account, contact us through the <a th:href="@{/contact}">contact page</a>.
+            </p>
+        </div>
+    </section>
+</div>
+</body>
+</html>

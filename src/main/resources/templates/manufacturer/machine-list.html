@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Machines · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Machines</h1>
+            <p class="page-subtitle">Your production capacity. Buyers never see serial numbers or locations.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-ghost" th:href="@{/manufacturer/machines/import}"><i class="bi bi-upload me-1"></i> Import CSV</a>
+            <a class="btn btn-ghost" th:href="@{/manufacturer/machines/export}" th:if="${!#lists.isEmpty(machines)}">
+                <i class="bi bi-download me-1"></i> Export CSV</a>
+            <a class="btn btn-forge" th:href="@{/manufacturer/machines/new}"><i class="bi bi-plus-lg me-1"></i> Add machine</a>
+        </div>
+    </div>
+
+    <div class="ft-card">
+        <div class="table-responsive" th:if="${!#lists.isEmpty(machines)}">
+            <table class="table table-ft table-hover">
+                <thead>
+                <tr>
+                    <th>Machine</th>
+                    <th>Serial no.</th>
+                    <th>Capacity</th>
+                    <th>Processes</th>
+                    <th>Materials</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="m : ${machines}">
+                    <td>
+                        <strong th:text="${m.machineName}">VMC-850</strong><br>
+                        <small th:text="${m.machineType + (m.modelNumber != null ? ' · ' + m.modelNumber : '')}">CNC Mill</small>
+                        <small th:if="${m.location != null}" th:text="${' · ' + m.location}"> · Bay 1</small>
+                    </td>
+                    <td th:text="${m.serialNumber} ?: '—'">SN-001</td>
+                    <td th:text="${m.capacityValue != null} ? ${m.capacityValue.stripTrailingZeros().toPlainString() + ' ' + m.capacityUnit} : '—'">850 mm</td>
+                    <td><span class="chip" th:each="p : ${m.processes}" th:text="${p}">CNC</span></td>
+                    <td><span class="chip" th:each="mat : ${m.materials}" th:text="${mat}">Steel</span></td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${m.status})}"></span></td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-ghost" th:href="@{/manufacturer/machines/{id}/edit(id=${m.id})}" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a class="btn btn-sm btn-ghost" th:href="@{/manufacturer/availability(machineId=${m.id})}" title="Working hours">
+                            <i class="bi bi-calendar-week"></i>
+                        </a>
+                        <div class="dropdown d-inline-block">
+                            <button class="btn btn-sm btn-ghost dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false" title="Change status">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li th:each="s : ${statuses}" th:if="${s != m.status}">
+                                    <form th:action="@{/manufacturer/machines/{id}/status(id=${m.id})}" method="post" class="m-0"
+                                          th:attr="data-confirm=${s.name() == 'INACTIVE'} ? 'Deactivate this machine? It will not be bookable.' : null">
+                                        <input type="hidden" name="status" th:value="${s}">
+                                        <button type="submit" class="dropdown-item" th:text="${'Set ' + s.label}">Set Active</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <th:block th:if="${#lists.isEmpty(machines)}"><div th:replace="~{fragments/empty-state :: empty('bi-gear-wide-connected', 'No machines yet', 'Add your machines one by one, or import many at once from a CSV file.', '/manufacturer/machines/new', 'Add first machine')}"></div></th:block>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Inspection queue · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Inspection queue</h1>
+            <p class="page-subtitle">Oldest first. Batches on hold stay here until a final decision.</p>
+        </div>
+    </div>
+    <div class="ft-card">
+        <div class="table-responsive" th:if="${!#lists.isEmpty(batches)}">
+            <table class="table table-ft table-hover">
+                <thead><tr><th>Batch</th><th>Order</th><th>Manufacturer</th><th>Item</th><th>Quantity</th><th>Waiting since</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="b : ${batches}">
+                    <td th:text="${b.batchNumber}">BAT</td>
+                    <td th:text="${b.orderNumber}">ORD</td>
+                    <td th:text="${b.manufacturerName}">Mfr</td>
+                    <td><span th:text="${b.itemTitle}">Item</span><br><small th:text="${b.processName + ' · ' + b.materialName}">CNC</small></td>
+                    <td th:text="${b.quantity.stripTrailingZeros().toPlainString() + ' ' + b.quantityUnit}">50</td>
+                    <td th:text="${@fmt.dateTime(b.updatedAt)}">date</td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${b.status})}"></span></td>
+                    <td class="text-end"><a class="btn btn-sm btn-forge" th:href="@{/inspector/batches/{id}(id=${b.id})}">Open</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${#lists.isEmpty(batches)}"><div th:replace="~{fragments/empty-state :: empty('bi-clipboard-check', 'Nothing to inspect', 'All batches have been inspected.', null, null)}"></div></th:block>
+    </div>
+</div>
+</body>
+</html>

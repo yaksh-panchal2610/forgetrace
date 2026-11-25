@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>RFQ | ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/buyer/rfqs}" class="small"><i class="bi bi-arrow-left"></i> RFQs</a>
+            <h1 class="page-title mt-1" th:text="${rfq.title}">Title</h1>
+            <p class="page-subtitle">
+                <span th:text="${rfq.rfqNumber}">RFQ</span> | Posted <span th:text="${rfq.createdAt != null} ? ${@fmt.dateTime(rfq.createdAt)} : '-'">date</span>
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span th:replace="~{fragments/status-badge :: badge(${rfq.status})}"></span>
+            <form th:if="${rfq.cancellable}" th:action="@{/buyer/rfqs/{id}/cancel(id=${rfq.id})}" method="post"
+                  data-confirm="Cancel this RFQ? All submitted quotations will be closed.">
+                <button type="submit" class="btn btn-ghost btn-sm text-danger"><i class="bi bi-x-circle me-1"></i>Cancel RFQ</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="ft-card mb-4">
+        <div class="ft-card-header">
+            <h2 class="ft-card-title">Quotations</h2>
+            <span class="small text-muted-ft" th:if="${!#lists.isEmpty(quotations)}">Click a column to sort</span>
+        </div>
+
+        <div class="table-responsive" th:if="${!#lists.isEmpty(quotations)}">
+            <table class="table table-ft table-hover" data-sortable>
+                <thead>
+                <tr>
+                    <th data-sort="text">Manufacturer</th>
+                    <th data-sort="number" class="text-end">Unit price</th>
+                    <th data-sort="number" class="text-end">Setup + tax</th>
+                    <th data-sort="number" class="text-end">Total</th>
+                    <th data-sort="number">Lead time</th>
+                    <th data-sort="text">Valid until</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="q : ${quotations}"
+                    th:with="canAccept=${q.status != null and q.status.name() == 'SUBMITTED' and !q.expired}">
+                    <td th:attr="data-value=${q.manufacturerName}">
+                        <a th:href="@{/manufacturers/{id}(id=${q.manufacturerId})}" target="_blank" th:text="${q.manufacturerName}">Manufacturer</a>
+                        <span class="rating small ms-1" th:if="${q.manufacturerRating != null}">
+                            <i class="bi bi-star-fill"></i> <span th:text="${@fmt.rating(q.manufacturerRating)}">4.5</span>
+                        </span><br>
+                        <span class="tag-best" th:if="${q.cheapest}">Lowest price</span>
+                        <span class="tag-best tag-fast" th:if="${q.fastest}">Fastest</span>
+                        <small th:if="${q.versionNumber > 1}" th:text="${'v' + q.versionNumber}">v2</small>
+                    </td>
+                    <td class="text-end" th:attr="data-value=${q.unitPrice}" th:text="${@fmt.money(q.unitPrice, q.currency)}">0</td>
+                    <td class="text-end">
+                        <small>
+                            <span th:text="${q.setupFee != null} ? ${@fmt.money(q.setupFee, q.currency)} : '-'">0</span>
+                            +
+                            <span th:text="${q.taxAmount != null} ? ${@fmt.money(q.taxAmount, q.currency)} : '-'">0</span>
+                        </small>
+                    </td>
+                    <td class="text-end fw-semibold" th:attr="data-value=${q.totalAmount}" th:text="${@fmt.money(q.totalAmount, q.currency)}">0</td>
+                    <td th:attr="data-value=${q.leadTimeDays}" th:text="${q.leadTimeDays + ' days'}">14 days</td>
+                    <td>
+                        <span th:text="${q.validUntil != null} ? ${@fmt.date(q.validUntil)} : '-'">date</span>
+                        <small class="text-danger d-block" th:if="${q.expired}">Expired</small>
+                    </td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${q.status})}"></span></td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-ghost" th:href="@{/buyer/quotations/{id}(id=${q.quotationId})}">View</a>
+                        <form th:if="${canAccept}" th:action="@{/buyer/orders}" method="post" class="d-inline"
+                              data-confirm="Accept this quotation? A production order will be created and the other quotations will be closed.">
+                            <input type="hidden" name="quotationId" th:value="${q.quotationId}">
+                            <button type="submit" class="btn btn-sm btn-forge">Accept</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <th:block th:if="${#lists.isEmpty(quotations)}"><div th:replace="~{fragments/empty-state :: empty('bi-hourglass-split', 'Waiting for quotations', 'Matching verified manufacturers have been notified. Quotations will appear here.', null, null)}"></div></th:block>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Request details</h2>
+                <dl class="row detail-list mb-0">
+                    <dt class="col-sm-3">Process</dt><dd class="col-sm-9" th:text="${rfq.processName}">CNC</dd>
+                    <dt class="col-sm-3">Material</dt><dd class="col-sm-9" th:text="${rfq.materialName}">Steel</dd>
+                    <dt class="col-sm-3">Quantity</dt>
+                    <dd class="col-sm-9" th:text="${rfq.quantity.stripTrailingZeros().toPlainString() + ' ' + rfq.quantityUnit}">100 pcs</dd>
+                    <dt class="col-sm-3">Description</dt>
+                    <dd class="col-sm-9" style="white-space: pre-line" th:text="${rfq.description} ?: '-'">Description</dd>
+                    <th:block th:if="${rfq.specifications != null and !#lists.isEmpty(rfq.specifications)}">
+                        <dt class="col-sm-3">Specifications</dt>
+                        <dd class="col-sm-9">
+                            <table class="table table-ft table-sm mb-0">
+                                <tr th:each="s : ${rfq.specifications}">
+                                    <td class="text-muted-ft" style="width: 40%" th:text="${s.name}">Name</td>
+                                    <td th:text="${s.value}">Value</td>
+                                </tr>
+                            </table>
+                        </dd>
+                    </th:block>
+                    <dt class="col-sm-3">Tolerances</dt>
+                    <dd class="col-sm-9" th:text="${rfq.toleranceNotes} ?: '-'">Notes</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3">Timeline</h2>
+                <dl class="detail-list mb-0">
+                    <dt>Quote deadline</dt>
+                    <dd th:if="${rfq.quoteDeadline != null}"><span th:text="${@fmt.dateTime(rfq.quoteDeadline)}">date</span>
+                        <small class="text-muted-ft d-block" th:text="${@fmt.timeLeft(rfq.quoteDeadline)}">left</small></dd>
+                    <dd th:if="${rfq.quoteDeadline == null}">-</dd>
+                    <dt>Required delivery</dt><dd th:text="${rfq.deliveryDate != null} ? ${@fmt.localDate(rfq.deliveryDate)} : '-'">date</dd>
+                    <dt>Deliver to</dt><dd style="white-space: pre-line" th:text="${rfq.deliveryAddress} ?: '-'">Address</dd>
+                </dl>
+            </div>
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Attachments</h2>
+                <th:block th:if="${rfq.attachments != null}">
+                    <a th:each="a : ${rfq.attachments}" class="file-link" th:href="@{/files/{id}(id=${a.fileId})}">
+                        <i class="bi bi-file-earmark-arrow-down text-info"></i>
+                        <span class="flex-grow-1 text-truncate" th:text="${a.filename}">drawing.pdf</span>
+                        <small class="text-muted-ft" th:text="${#numbers.formatDecimal(a.sizeBytes / 1024.0, 1, 0) + ' KB'}">120 KB</small>
+                    </a>
+                </th:block>
+                <p class="small text-muted-ft mb-0" th:if="${rfq.attachments == null or #lists.isEmpty(rfq.attachments)}">No files attached.</p>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/quotation-compare.js}"></script>
+</div>
+</body>
+</html>

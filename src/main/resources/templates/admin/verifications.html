@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Verifications · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header"><div><h1 class="page-title">Manufacturer verification</h1>
+        <p class="page-subtitle">Only verified manufacturers receive RFQs and can send quotations.</p></div></div>
+
+    <div class="ft-card mb-3" th:each="o : ${pending}">
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <h2 class="h5 mb-1" th:text="${o.displayName}">Name</h2>
+                <p class="small text-muted-ft mb-2" th:text="${o.legalName}">Legal</p>
+                <dl class="row small mb-0">
+                    <dt class="col-5 text-muted-ft">Registration no.</dt><dd class="col-7" th:text="${o.registrationNumber} ?: '—'">r</dd>
+                    <dt class="col-5 text-muted-ft">GSTIN / tax ID</dt><dd class="col-7" th:text="${o.taxId} ?: '—'">t</dd>
+                    <dt class="col-5 text-muted-ft">Email / phone</dt><dd class="col-7" th:text="${(o.email ?: '—') + ' · ' + (o.phone ?: '—')}">e</dd>
+                    <dt class="col-5 text-muted-ft">Location</dt><dd class="col-7" th:text="${(o.city ?: '') + ' ' + (o.state ?: '')}">c</dd>
+                    <dt class="col-5 text-muted-ft">Registered</dt><dd class="col-7" th:text="${@fmt.dateTime(o.createdAt)}">d</dd>
+                </dl>
+            </div>
+            <div class="col-lg-6">
+                <form class="mb-3" th:action="@{/admin/verifications/{id}/approve(id=${o.id})}" method="post">
+                    <label class="form-label small">Note to manufacturer (optional)</label>
+                    <div class="input-group">
+                        <input type="text" name="note" class="form-control" maxlength="255">
+                        <button class="btn btn-forge" type="submit"><i class="bi bi-check2"></i> Approve</button>
+                    </div>
+                </form>
+                <form th:action="@{/admin/verifications/{id}/reject(id=${o.id})}" method="post" data-confirm="Reject this manufacturer?">
+                    <label class="form-label small">Reason for rejection</label>
+                    <div class="input-group">
+                        <input type="text" name="reason" class="form-control" maxlength="255" placeholder="e.g. GSTIN does not match legal name">
+                        <button class="btn btn-ghost" type="submit"><i class="bi bi-x"></i> Reject</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="ft-card" th:if="${#lists.isEmpty(pending)}">
+        <div th:replace="~{fragments/empty-state :: empty('bi-patch-check', 'Nothing to review', 'New manufacturer registrations appear here.', '/admin/organizations', 'All organizations')}"></div>
+    </div>
+</div>
+</body>
+</html>

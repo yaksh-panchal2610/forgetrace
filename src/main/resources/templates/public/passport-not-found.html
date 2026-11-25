@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/public :: layout(~{::title}, ~{::content})}">
+<head><title>Passport not found · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <section class="section pt-5">
+        <div class="container text-center" style="max-width: 560px;">
+            <div class="error-code warn">404</div>
+            <h1 class="section-title mt-2">Passport not found</h1>
+            <p class="section-lead mx-auto">This QR code or link does not match any ForgeTrace product passport. Check that you scanned the full code.</p>
+            <a class="btn btn-forge" th:href="@{/}">Go to ForgeTrace</a>
+        </div>
+    </section>
+</div>
+</body>
+</html>

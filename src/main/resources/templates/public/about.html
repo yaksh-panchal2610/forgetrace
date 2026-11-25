@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/public :: layout(~{::title}, ~{::content})}">
+<head><title>About · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <section class="section pt-5">
+        <div class="container content-page">
+            <span class="eyebrow">About</span>
+            <h1 class="section-title">Making manufacturing sourcing simple and traceable</h1>
+
+            <h2>The problem</h2>
+            <p>
+                Small and medium manufacturers often have machine capacity that sits idle, while buyers spend days
+                calling suppliers, comparing quotes over email and chasing production updates. Once parts are delivered,
+                there is rarely a clear record of how and where each batch was made and checked.
+            </p>
+
+            <h2>What ForgeTrace does</h2>
+            <ul>
+                <li>Connects industrial buyers with verified job-work manufacturers through RFQs and quotations.</li>
+                <li>Matches RFQs to manufacturers by process and material, so suppliers only see relevant work.</li>
+                <li>Schedules real machine capacity and prevents double bookings.</li>
+                <li>Records production status, batches and quality inspections in one place.</li>
+                <li>Gives every approved batch a QR passport that buyers can scan and share.</li>
+            </ul>
+
+            <h2>Who it is for</h2>
+            <p>
+                Industrial buyers, startups building hardware, and small and medium job-work manufacturers offering
+                processes such as CNC machining, laser cutting, fabrication and 3D printing.
+            </p>
+
+            <h2>About this project</h2>
+            <p>
+                ForgeTrace is being built as a university startup project by a team of B.Tech Information Technology
+                students. The current version is a working prototype. Payments run in test mode only and no real
+                transactions take place.
+            </p>
+        </div>
+    </section>
+</div>
+</body>
+</html>

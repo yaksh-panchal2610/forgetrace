@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Order tracking · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/buyer/orders/{id}(id=${t.orderId})}" class="small"><i class="bi bi-arrow-left"></i> Order <span th:text="${t.orderNumber}">ORD</span></a>
+            <h1 class="page-title mt-1">Tracking</h1>
+            <p class="page-subtitle" th:text="${t.itemTitle + ' · ' + t.manufacturerName}">Item</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <span th:replace="~{fragments/status-badge :: badge(${t.status})}"></span>
+            <a th:if="${!t.paid and t.status.name() != 'CANCELLED'}" class="btn btn-forge"
+               th:href="@{/buyer/orders/{id}/pay(id=${t.orderId})}"><i class="bi bi-credit-card me-1"></i> Pay now</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="ft-card mb-4" th:each="s : ${t.shipments}">
+                <div class="ft-card-header mb-3">
+                    <h2 class="ft-card-title"><i class="bi bi-truck me-1"></i> <span th:text="${s.carrierName}">Carrier</span>
+                        <small class="text-muted-ft" th:if="${s.trackingNumber != null}" th:text="${'· ' + s.trackingNumber}">AWB</small></h2>
+                    <span th:replace="~{fragments/status-badge :: badge(${s.status})}"></span>
+                </div>
+                <div class="row g-3 mb-3 small">
+                    <div class="col-sm-4"><span class="text-muted-ft d-block">Dispatched</span><span th:text="${@fmt.localDate(s.dispatchDate)}">date</span></div>
+                    <div class="col-sm-4"><span class="text-muted-ft d-block">Expected</span><span th:text="${s.expectedDelivery != null ? @fmt.localDate(s.expectedDelivery) : '—'}">date</span></div>
+                    <div class="col-sm-4"><span class="text-muted-ft d-block">Delivered</span><span th:text="${s.deliveredAt != null ? @fmt.dateTime(s.deliveredAt) : '—'}">date</span></div>
+                </div>
+                <ul class="ship-events mb-3">
+                    <li th:each="e : ${s.events}">
+                        <strong th:text="${e.status.label}">Dispatched</strong>
+                        <small class="text-muted-ft ms-2" th:text="${@fmt.dateTime(e.time)}">date</small>
+                        <div class="small" th:if="${e.location != null}"><i class="bi bi-geo-alt"></i> <span th:text="${e.location}">loc</span></div>
+                        <div class="small text-muted-ft" th:if="${e.remarks != null}" th:text="${e.remarks}">remarks</div>
+                    </li>
+                </ul>
+                <h3 class="h6">Batches in this shipment</h3>
+                <table class="table table-ft table-sm mb-0">
+                    <tr th:each="b : ${s.batches}">
+                        <td th:text="${b.batchNumber}">BAT</td>
+                        <td th:text="${b.quantity.stripTrailingZeros().toPlainString() + ' ' + s.quantityUnit}">50</td>
+                        <td class="text-end"><a th:if="${b.hasPassport}" th:href="@{/p/{t}(t=${b.passportToken})}" target="_blank"><i class="bi bi-qr-code"></i> Passport</a></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="ft-card" th:if="${#lists.isEmpty(t.shipments)}">
+                <div th:replace="~{fragments/empty-state :: empty('bi-truck', 'Not shipped yet', 'Tracking appears here once the manufacturer dispatches your order.', null, null)}"></div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Payment</h2>
+                <p class="mb-3" th:if="${t.paid}"><i class="bi bi-check-circle-fill text-success"></i> Paid</p>
+                <p class="mb-3 text-muted-ft" th:if="${!t.paid}">Not paid yet. The manufacturer can ship only after payment.</p>
+                <table class="table table-ft table-sm mb-0" th:if="${!#lists.isEmpty(payments)}">
+                    <tr th:each="p : ${payments}">
+                        <td><span th:text="${p.reference}">PAY</span><br><small class="text-muted-ft" th:text="${p.method.label}">Card</small></td>
+                        <td th:text="${@fmt.money(p.amount, p.currency)}">₹</td>
+                        <td class="text-end"><span th:replace="~{fragments/status-badge :: badge(${p.status})}"></span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

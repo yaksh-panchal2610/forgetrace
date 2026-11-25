@@ -1,0 +1,460 @@
+﻿
+===== rfq-detail.html (8558 bytes) =====
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>RFQ · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/buyer/rfqs}" class="small"><i class="bi bi-arrow-left"></i> RFQs</a>
+            <h1 class="page-title mt-1" th:text="${rfq.title}">Title</h1>
+            <p class="page-subtitle">
+                <span th:text="${rfq.rfqNumber}">RFQ</span> · Posted <span th:text="${@fmt.dateTime(rfq.createdAt)}">date</span>
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span th:replace="~{fragments/status-badge :: badge(${rfq.status})}"></span>
+            <form th:if="${rfq.cancellable}" th:action="@{/buyer/rfqs/{id}/cancel(id=${rfq.id})}" method="post"
+                  data-confirm="Cancel this RFQ? All submitted quotations will be closed.">
+                <button type="submit" class="btn btn-ghost btn-sm text-danger"><i class="bi bi-x-circle me-1"></i>Cancel RFQ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== Quotations ===== -->
+    <div class="ft-card mb-4">
+        <div class="ft-card-header">
+            <h2 class="ft-card-title">Quotations</h2>
+            <span class="small text-muted-ft" th:if="${!#lists.isEmpty(quotations)}">Click a column to sort</span>
+        </div>
+
+        <div class="table-responsive" th:if="${!#lists.isEmpty(quotations)}">
+            <table class="table table-ft table-hover" data-sortable>
+                <thead>
+                <tr>
+                    <th data-sort="text">Manufacturer</th>
+                    <th data-sort="number" class="text-end">Unit price</th>
+                    <th data-sort="number" class="text-end">Setup + tax</th>
+                    <th data-sort="number" class="text-end">Total</th>
+                    <th data-sort="number">Lead time</th>
+                    <th data-sort="text">Valid until</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="q : ${quotations}">
+                    <td th:attr="data-value=${q.manufacturerName}">
+                        <a th:href="@{/manufacturers/{id}(id=${q.manufacturerId})}" target="_blank" th:text="${q.manufacturerName}">Manufacturer</a>
+                        <span class="rating small ms-1" th:if="${q.manufacturerRating != null}">
+                            <i class="bi bi-star-fill"></i> <span th:text="${@fmt.rating(q.manufacturerRating)}">4.5</span>
+                        </span><br>
+                        <span class="tag-best" th:if="${q.cheapest}">Lowest price</span>
+                        <span class="tag-best tag-fast" th:if="${q.fastest}">Fastest</span>
+                        <small th:if="${q.versionNumber > 1}" th:text="${'v' + q.versionNumber}">v2</small>
+                    </td>
+                    <td class="text-end" th:attr="data-value=${q.unitPrice}" th:text="${@fmt.money(q.unitPrice, q.currency)}">₹0</td>
+                    <td class="text-end" th:attr="data-value=${q.setupFee.add(q.taxAmount)}">
+                        <small th:text="${@fmt.money(q.setupFee, q.currency) + ' + ' + @fmt.money(q.taxAmount, q.currency)}">₹0 + ₹0</small>
+                    </td>
+                    <td class="text-end fw-semibold" th:attr="data-value=${q.totalAmount}" th:text="${@fmt.money(q.totalAmount, q.currency)}">₹0</td>
+                    <td th:attr="data-value=${q.leadTimeDays}" th:text="${q.leadTimeDays + ' days'}">14 days</td>
+                    <td th:attr="data-value=${q.validUntil}">
+                        <span th:text="${@fmt.date(q.validUntil)}">date</span>
+                        <br><small class="text-danger" th:if="${q.expired}">Expired</small>
+                    </td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${q.status})}"></span></td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-ghost" th:href="@{/buyer/quotations/{id}(id=${q.quotationId})}">View</a>
+                        <form th:if="${q.acceptable}" th:action="@{/buyer/orders}" method="post" class="d-inline"
+                              th:attr="data-confirm=${'Accept ' + q.quotationNumber + ' from ' + q.manufacturerName + ' for ' + @fmt.money(q.totalAmount, q.currency) + '? A production order will be created and other quotations closed.'}">
+                            <input type="hidden" name="quotationId" th:value="${q.quotationId}">
+                            <button type="submit" class="btn btn-sm btn-forge">Accept</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <th:block th:if="${#lists.isEmpty(quotations)}"><div th:replace="~{fragments/empty-state :: empty('bi-hourglass-split', 'Waiting for quotations', 'Matching verified manufacturers have been notified. Quotations will appear here.', null, null)}"></div></th:block>
+    </div>
+
+    <!-- ===== RFQ details ===== -->
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Request details</h2>
+                <dl class="row detail-list mb-0">
+                    <dt class="col-sm-3">Process</dt><dd class="col-sm-9" th:text="${rfq.processName}">CNC</dd>
+                    <dt class="col-sm-3">Material</dt><dd class="col-sm-9" th:text="${rfq.materialName}">Steel</dd>
+                    <dt class="col-sm-3">Quantity</dt>
+                    <dd class="col-sm-9" th:text="${rfq.quantity.stripTrailingZeros().toPlainString() + ' ' + rfq.quantityUnit}">100 pcs</dd>
+                    <dt class="col-sm-3">Description</dt>
+                    <dd class="col-sm-9" style="white-space: pre-line" th:text="${rfq.description} ?: '—'">Description</dd>
+                    <th:block th:if="${!#lists.isEmpty(rfq.specifications)}">
+                        <dt class="col-sm-3">Specifications</dt>
+                        <dd class="col-sm-9">
+                            <table class="table table-ft table-sm mb-0">
+                                <tr th:each="s : ${rfq.specifications}">
+                                    <td class="text-muted-ft" style="width: 40%" th:text="${s.name}">Name</td>
+                                    <td th:text="${s.value}">Value</td>
+                                </tr>
+                            </table>
+                        </dd>
+                    </th:block>
+                    <dt class="col-sm-3">Tolerances</dt>
+                    <dd class="col-sm-9" th:text="${rfq.toleranceNotes} ?: '—'">Notes</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3">Timeline</h2>
+                <dl class="detail-list mb-0">
+                    <dt>Quote deadline</dt>
+                    <dd><span th:text="${@fmt.dateTime(rfq.quoteDeadline)}">date</span>
+                        <small class="text-muted-ft d-block" th:text="${@fmt.timeLeft(rfq.quoteDeadline)}">left</small></dd>
+                    <dt>Required delivery</dt><dd th:text="${@fmt.localDate(rfq.deliveryDate)}">date</dd>
+                    <dt>Deliver to</dt><dd style="white-space: pre-line" th:text="${rfq.deliveryAddress}">Address</dd>
+                </dl>
+            </div>
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Attachments</h2>
+                <a th:each="a : ${rfq.attachments}" class="file-link" th:href="@{/files/{id}(id=${a.fileId})}">
+                    <i class="bi bi-file-earmark-arrow-down text-info"></i>
+                    <span class="flex-grow-1 text-truncate" th:text="${a.filename}">drawing.pdf</span>
+                    <small class="text-muted-ft" th:text="${#numbers.formatDecimal(a.sizeBytes / 1024.0, 1, 0) + ' KB'}">120 KB</small>
+                </a>
+                <p class="small text-muted-ft mb-0" th:if="${#lists.isEmpty(rfq.attachments)}">No files attached.</p>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/quotation-compare.js}"></script>
+</div>
+</body>
+</html>
+
+===== quotation-detail.html (4633 bytes) =====
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Quotation · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/buyer/rfqs/{id}(id=${rfq.id})}" class="small"><i class="bi bi-arrow-left"></i> <span th:text="${rfq.title}">RFQ</span></a>
+            <h1 class="page-title mt-1">
+                Quotation <span th:text="${q.quotationNumber}">QTN</span>
+                <small class="text-muted-ft fs-6" th:if="${q.versionNumber > 1}" th:text="${'version ' + q.versionNumber}">v2</small>
+            </h1>
+            <p class="page-subtitle">
+                From <a th:href="@{/manufacturers/{id}(id=${q.manufacturerId})}" target="_blank" th:text="${q.manufacturerName}">Manufacturer</a>
+                · Submitted <span th:text="${@fmt.dateTime(q.submittedAt)}">date</span>
+            </p>
+        </div>
+        <span th:replace="~{fragments/status-badge :: badge(${q.status})}"></span>
+    </div>
+
+    <div class="banner-warn" th:if="${q.expired and q.status.name() == 'SUBMITTED'}">
+        <i class="bi bi-clock-history"></i>
+        <div>This quotation expired on <strong th:text="${@fmt.date(q.validUntil)}">date</strong> and can no longer be accepted.</div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3">Price breakdown</h2>
+                <div class="price-box">
+                    <div class="row-line">
+                        <span>Unit price × <span th:text="${rfq.quantity.stripTrailingZeros().toPlainString() + ' ' + rfq.quantityUnit}">100 pcs</span></span>
+                        <span th:text="${@fmt.money(q.unitPrice, q.currency)} + ' each'">₹0 each</span>
+                    </div>
+                    <div class="row-line"><span>One-time setup fee</span><span th:text="${@fmt.money(q.setupFee, q.currency)}">₹0</span></div>
+                    <div class="row-line"><span>Tax (GST)</span><span th:text="${@fmt.money(q.taxAmount, q.currency)}">₹0</span></div>
+                    <div class="row-line total-line"><span>Total payable</span><span th:text="${@fmt.money(q.totalAmount, q.currency)}">₹0</span></div>
+                </div>
+                <p class="small text-muted-ft mt-2 mb-0">This is the full price. ForgeTrace adds no hidden charges.</p>
+            </div>
+
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Terms from the manufacturer</h2>
+                <p class="mb-0" style="white-space: pre-line" th:text="${q.terms} ?: 'No additional terms.'">Terms</p>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="ft-card mb-4">
+                <dl class="detail-list mb-0">
+                    <dt>Lead time</dt><dd th:text="${q.leadTimeDays + ' days after order confirmation'}">14 days</dd>
+                    <dt>Valid until</dt><dd th:text="${@fmt.dateTime(q.validUntil)}">date</dd>
+                    <dt>Required delivery (your RFQ)</dt><dd th:text="${@fmt.localDate(rfq.deliveryDate)}">date</dd>
+                    <dt>Manufacturer rating</dt>
+                    <dd th:text="${q.manufacturerRating != null} ? ${@fmt.rating(q.manufacturerRating) + ' / 5'} : 'No reviews yet'">4.5 / 5</dd>
+                </dl>
+            </div>
+
+            <div class="ft-card" th:if="${q.acceptable}">
+                <h2 class="ft-card-title mb-2">Decision</h2>
+                <p class="small text-muted-ft">Accepting creates a production order with this manufacturer and closes all other quotations on this RFQ.</p>
+                <form th:action="@{/buyer/orders}" method="post" class="mb-2"
+                      th:attr="data-confirm=${'Accept this quotation for ' + @fmt.money(q.totalAmount, q.currency) + '?'}">
+                    <input type="hidden" name="quotationId" th:value="${q.quotationId}">
+                    <button type="submit" class="btn btn-forge w-100"><i class="bi bi-check2-circle me-1"></i> Accept quotation</button>
+                </form>
+                <form th:action="@{/buyer/quotations/{id}/reject(id=${q.quotationId})}" method="post"
+                      data-confirm="Decline this quotation? The manufacturer will be informed.">
+                    <button type="submit" class="btn btn-ghost w-100">Decline</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+===== quotation-list.html (2566 bytes) =====
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Quotations · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Quotations received</h1>
+            <p class="page-subtitle">All offers on your RFQs. Open an RFQ to compare its quotations side by side.</p>
+        </div>
+    </div>
+
+    <div class="ft-card">
+        <div class="table-responsive" th:if="${!page.isEmpty()}">
+            <table class="table table-ft table-hover">
+                <thead>
+                <tr><th>Quotation</th><th>RFQ</th><th>Manufacturer</th><th class="text-end">Total</th><th>Lead time</th><th>Valid until</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="q : ${page.content}">
+                    <td>
+                        <a th:href="@{/buyer/quotations/{id}(id=${q.quotationId})}" th:text="${q.quotationNumber}">QTN</a>
+                        <small th:if="${q.versionNumber > 1}" th:text="${' v' + q.versionNumber}"> v2</small>
+                    </td>
+                    <td>
+                        <a th:href="@{/buyer/rfqs/{id}(id=${q.rfqId})}" th:text="${q.rfqTitle}">RFQ</a><br>
+                        <small th:text="${q.rfqNumber}">RFQ-...</small>
+                    </td>
+                    <td th:text="${q.manufacturerName}">Manufacturer</td>
+                    <td class="text-end fw-semibold" th:text="${@fmt.money(q.totalAmount, q.currency)}">₹0</td>
+                    <td th:text="${q.leadTimeDays + ' days'}">14 days</td>
+                    <td>
+                        <span th:text="${@fmt.date(q.validUntil)}">date</span>
+                        <small class="text-danger d-block" th:if="${q.expired and q.status.name() == 'SUBMITTED'}">Expired</small>
+                    </td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${q.status})}"></span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${page.isEmpty()}"><div th:replace="~{fragments/empty-state :: empty('bi-cash-stack', 'No quotations yet', 'Quotations appear here when manufacturers respond to your RFQs.', '/buyer/rfqs/new', 'Create an RFQ')}"></div></th:block>
+    </div>
+
+    <nav th:replace="~{fragments/pagination :: pagination(${page}, '/buyer/quotations')}"></nav>
+</div>
+</body>
+</html>
+
+===== BuyerQuotationController.java (2117 bytes) =====
+package com.forgetrace.controller.buyer;
+
+import com.forgetrace.dto.response.QuotationComparisonRow;
+import com.forgetrace.exception.BusinessRuleException;
+import com.forgetrace.service.QuotationService;
+import com.forgetrace.service.RfqService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+/** Accepting a quotation is a POST to /buyer/orders - see BuyerOrderController (Step 7). */
+@Controller
+@RequestMapping("/buyer/quotations")
+@RequiredArgsConstructor
+public class BuyerQuotationController {
+
+    private final QuotationService quotationService;
+    private final RfqService rfqService;
+
+    @GetMapping
+    public String list(@RequestParam(defaultValue = "0") int page, Model model) {
+        model.addAttribute("page", quotationService.buyerQuotations(page));
+        return "buyer/quotation-list";
+    }
+
+    @GetMapping("/{id}")
+    public String detail(@PathVariable Long id, Model model) {
+        QuotationComparisonRow quotation = quotationService.detailForBuyer(id);
+        model.addAttribute("q", quotation);
+        model.addAttribute("rfq", rfqService.detailForBuyer(quotation.rfqId()));
+        return "buyer/quotation-detail";
+    }
+
+    @PostMapping("/{id}/reject")
+    public String reject(@PathVariable Long id, RedirectAttributes redirect) {
+        try {
+            quotationService.reject(id);
+            redirect.addFlashAttribute("success", "Quotation declined. The manufacturer has been informed.");
+        } catch (BusinessRuleException ex) {
+            redirect.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/buyer/quotations/" + id;
+    }
+}
+
+===== BuyerRfqController.java (3266 bytes) =====
+package com.forgetrace.controller.buyer;
+
+import com.forgetrace.dto.request.RfqCreateRequest;
+import com.forgetrace.entity.Rfq;
+import com.forgetrace.exception.BusinessRuleException;
+import com.forgetrace.service.QuotationService;
+import com.forgetrace.service.RfqService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+@RequestMapping("/buyer/rfqs")
+@RequiredArgsConstructor
+public class BuyerRfqController {
+
+    private final RfqService rfqService;
+    private final QuotationService quotationService;
+
+    @GetMapping
+    public String list(@RequestParam(defaultValue = "0") int page, Model model) {
+        model.addAttribute("page", rfqService.listMine(page));
+        return "buyer/rfq-list";
+    }
+
+    @GetMapping("/new")
+    public String newForm(Model model) {
+        model.addAttribute("form", rfqService.newForm());
+        addReferenceData(model);
+        return "buyer/rfq-new";
+    }
+
+    @PostMapping
+    public String create(@Valid @ModelAttribute("form") RfqCreateRequest form, BindingResult bindingResult,
+                         Model model, RedirectAttributes redirect) {
+        if (!bindingResult.hasErrors()) {
+            try {
+                Rfq rfq = rfqService.create(form);
+                redirect.addFlashAttribute("success", "RFQ " + rfq.getRfqNumber()
+                        + " posted. Matching verified manufacturers are being notified.");
+                return "redirect:/buyer/rfqs/" + rfq.getId();
+            } catch (BusinessRuleException ex) {
+                bindingResult.reject("rule", ex.getMessage());
+            }
+        }
+        addReferenceData(model);
+        return "buyer/rfq-new";
+    }
+
+    @GetMapping("/{id}")
+    public String detail(@PathVariable Long id, Model model) {
+        model.addAttribute("rfq", rfqService.detailForBuyer(id));
+        model.addAttribute("quotations", quotationService.compareForRfq(id));
+        return "buyer/rfq-detail";
+    }
+
+    @PostMapping("/{id}/cancel")
+    public String cancel(@PathVariable Long id, RedirectAttributes redirect) {
+        try {
+            rfqService.cancel(id);
+            redirect.addFlashAttribute("success", "RFQ cancelled. Manufacturers who quoted have been informed.");
+        } catch (BusinessRuleException ex) {
+            redirect.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/buyer/rfqs/" + id;
+    }
+
+    private void addReferenceData(Model model) {
+        model.addAttribute("processes", rfqService.activeProcesses());
+        model.addAttribute("materials", rfqService.activeMaterials());
+    }
+}
+
+===== QuotationComparisonRow.java (1142 bytes) =====
+package com.forgetrace.dto.response;
+
+import com.forgetrace.enums.QuotationStatus;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+
+/**
+ * One quotation as shown in lists and the buyer's comparison table.
+ * Full price breakdown is always shown - no hidden charges (dark-pattern checklist).
+ */
+public record QuotationComparisonRow(
+        Long quotationId,
+        String quotationNumber,
+        Long rfqId,
+        String rfqNumber,
+        String rfqTitle,
+        Long manufacturerId,
+        String manufacturerName,
+        int versionNumber,
+        BigDecimal unitPrice,
+        BigDecimal setupFee,
+        BigDecimal taxAmount,
+        BigDecimal totalAmount,
+        String currency,
+        int leadTimeDays,
+        Instant validUntil,
+        QuotationStatus status,
+        String terms,
+        Instant submittedAt,
+        boolean expired,
+        boolean cheapest,
+        boolean fastest,
+        Double manufacturerRating
+) {
+    /** Thymeleaf: ${row.acceptable} */
+    public boolean isAcceptable() {
+        return status == QuotationStatus.SUBMITTED && !expired;
+    }
+}
+dashboard.html
+disputes.html
+order-detail.html
+order-list.html
+order-tracking.html
+passports.html
+payment-checkout.html
+payments.html
+profile.html
+quotation-detail.html
+quotation-list.html
+review-form.html
+rfq-detail.html
+rfq-list.html
+rfq-new.html

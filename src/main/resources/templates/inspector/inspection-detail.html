@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Inspection · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/inspector/batches/{id}(id=${inspection.batchId})}" class="small"><i class="bi bi-arrow-left"></i> Batch <span th:text="${inspection.batchNumber}">BAT</span></a>
+            <h1 class="page-title mt-1" th:text="${inspection.type.label + ' inspection'}">Final inspection</h1>
+            <p class="page-subtitle" th:text="${inspection.inspectorName + ' · ' + @fmt.dateTime(inspection.inspectedAt)}">who</p>
+        </div>
+        <span th:replace="~{fragments/status-badge :: badge(${inspection.status})}"></span>
+    </div>
+    <div class="ft-card mb-4">
+        <div class="table-responsive">
+            <table class="table table-ft">
+                <thead><tr><th>Parameter</th><th>Min</th><th>Max</th><th>Actual</th><th>Unit</th><th>Result</th><th>Remarks</th></tr></thead>
+                <tbody>
+                <tr th:each="m : ${inspection.measurements}">
+                    <td th:text="${m.parameterName}">p</td>
+                    <td th:text="${m.expectedMin.stripTrailingZeros().toPlainString()}">0</td>
+                    <td th:text="${m.expectedMax.stripTrailingZeros().toPlainString()}">0</td>
+                    <td th:text="${m.actualValue.stripTrailingZeros().toPlainString()}">0</td>
+                    <td th:text="${m.unit}">mm</td>
+                    <td th:classappend="${m.pass} ? 'measure-pass' : 'measure-fail'" th:text="${m.result.label}">Pass</td>
+                    <td th:text="${m.remarks} ?: '—'">-</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="small text-muted-ft mb-0" th:if="${#lists.isEmpty(inspection.measurements)}">No measurements recorded.</p>
+    </div>
+    <div class="ft-card">
+        <h2 class="ft-card-title mb-2">Findings</h2>
+        <p class="mb-0" style="white-space: pre-line" th:text="${inspection.findings} ?: 'No findings recorded.'">f</p>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Organizations · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header"><div><h1 class="page-title">Organizations</h1></div></div>
+    <div class="ft-card">
+        <div class="table-responsive">
+            <table class="table table-ft table-hover">
+                <thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Tax ID</th><th>Verification</th><th>Joined</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="o : ${page.content}">
+                    <td><strong th:text="${o.displayName}">n</strong><br><small class="text-muted-ft" th:text="${o.legalName}">l</small></td>
+                    <td th:text="${o.organizationType.label}">Buyer</td>
+                    <td th:text="${(o.city ?: '') + ' ' + (o.state ?: '')}">c</td>
+                    <td th:text="${o.taxId} ?: '—'">t</td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${o.verificationStatus})}"></span></td>
+                    <td th:text="${@fmt.date(o.createdAt)}">d</td>
+                    <td class="text-end">
+                        <form th:if="${o.organizationType.name() == 'MANUFACTURER' and o.verificationStatus.name() == 'REJECTED'}"
+                              th:action="@{/admin/verifications/{id}/reopen(id=${o.id})}" method="post" class="d-inline">
+                            <button class="btn btn-sm btn-ghost" type="submit">Review again</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <nav th:replace="~{fragments/pagination :: pagination(${page}, '/admin/organizations')}"></nav>
+</div>
+</body>
+</html> 

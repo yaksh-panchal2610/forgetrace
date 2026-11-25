@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<header th:fragment="topbar" class="app-topbar">
+    <button class="icon-btn d-lg-none" type="button" data-sidebar-toggle aria-label="Open menu">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <div class="topbar-org">
+        <span class="org-name" th:text="${currentUser?.organizationName} ?: 'ForgeTrace'">Organization</span>
+        <span class="org-role"
+              th:text="${navRole == 'INSPECTOR' ? 'Quality inspector'
+                       : (navRole == 'ADMIN' ? 'Administrator'
+                       : (navRole == 'MANUFACTURER' ? 'Manufacturer' : 'Buyer'))}">Role</span>
+    </div>
+
+    <div class="topbar-actions">
+        <a th:href="@{/notifications}" class="icon-btn position-relative" title="Notifications" aria-label="Notifications">
+            <i class="bi bi-bell"></i>
+            <span th:if="${unreadNotifications != null and unreadNotifications > 0}" class="notif-count"
+                  th:text="${unreadNotifications > 9 ? '9+' : unreadNotifications}">3</span>
+        </a>
+        <div class="dropdown" th:if="${currentUser != null}">
+            <button class="user-chip dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="avatar" th:text="${#strings.toUpperCase(#strings.substring(currentUser.fullName, 0, 1))}">A</span>
+                <span class="d-none d-md-inline" th:text="${currentUser.fullName}">User name</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li class="px-3 py-2 small text-muted-ft" th:text="${currentUser.email}">email</li>
+                <li th:if="${navRole == 'BUYER'}"><a class="dropdown-item" th:href="@{/buyer/profile}"><i class="bi bi-building-gear me-2"></i>Profile &amp; company</a></li>
+                <li th:if="${navRole == 'MANUFACTURER'}"><a class="dropdown-item" th:href="@{/manufacturer/profile}"><i class="bi bi-building-gear me-2"></i>Profile &amp; company</a></li>
+                <li><a class="dropdown-item" th:href="@{/notifications}"><i class="bi bi-bell me-2"></i>Notifications</a></li>
+                <li><a class="dropdown-item" th:href="@{/}"><i class="bi bi-globe2 me-2"></i>Public website</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form th:action="@{/auth/logout}" method="post" class="m-0">
+                        <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Sign out</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</header>
+</html>

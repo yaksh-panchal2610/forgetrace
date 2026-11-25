@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Machine · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/manufacturer/machines}" class="small"><i class="bi bi-arrow-left"></i> Machines</a>
+            <h1 class="page-title mt-1" th:text="${machineId == null} ? 'Add machine' : 'Edit machine'">Add machine</h1>
+        </div>
+    </div>
+
+    <div class="ft-card" style="max-width: 900px;">
+        <form th:action="${machineId == null} ? @{/manufacturer/machines} : @{/manufacturer/machines/{id}(id=${machineId})}"
+              th:object="${form}" method="post" novalidate>
+
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+            </div>
+
+            <div class="form-section-title mt-0">Machine</div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="machineName">Machine name</label>
+                    <input type="text" th:field="*{machineName}" class="form-control" th:errorclass="is-invalid"
+                           placeholder="e.g. VMC-850 Vertical Machining Centre">
+                    <div class="invalid-feedback" th:errors="*{machineName}"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="machineType">Machine type</label>
+                    <input type="text" th:field="*{machineType}" class="form-control" th:errorclass="is-invalid"
+                           placeholder="e.g. CNC Mill, Laser Cutter, Press Brake">
+                    <div class="invalid-feedback" th:errors="*{machineType}"></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="modelNumber">Model no.</label>
+                    <input type="text" th:field="*{modelNumber}" class="form-control" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:errors="*{modelNumber}"></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="serialNumber">Serial no.</label>
+                    <input type="text" th:field="*{serialNumber}" class="form-control" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:errors="*{serialNumber}"></div>
+                    <div class="form-text text-muted-ft">Must be unique within your company.</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="machineStatus">Status</label>
+                    <select th:field="*{machineStatus}" class="form-select" th:errorclass="is-invalid">
+                        <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label}">Active</option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{machineStatus}"></div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="capacityValue">Capacity</label>
+                    <input type="number" step="0.01" min="0" th:field="*{capacityValue}" class="form-control" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:errors="*{capacityValue}"></div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="capacityUnit">Unit</label>
+                    <input type="text" th:field="*{capacityUnit}" class="form-control" th:errorclass="is-invalid"
+                           placeholder="mm, kW, tonnes...">
+                    <div class="invalid-feedback" th:errors="*{capacityUnit}"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="location">Location in factory</label>
+                    <input type="text" th:field="*{location}" class="form-control" th:errorclass="is-invalid" placeholder="e.g. Bay 2">
+                    <div class="invalid-feedback" th:errors="*{location}"></div>
+                </div>
+            </div>
+
+            <div class="form-section-title">Capabilities</div>
+            <p class="small text-muted-ft">Only the processes and materials your company offers are listed. Change them in
+                <a th:href="@{/manufacturer/profile}">Profile &amp; company</a>.</p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Processes this machine can do</label>
+                    <div class="check-grid" th:classappend="${#fields.hasErrors('processIds')} ? 'has-error'">
+                        <div class="form-check" th:each="p : ${processes}">
+                            <input class="form-check-input" type="checkbox" th:field="*{processIds}" th:value="${p.id}">
+                            <label class="form-check-label" th:for="${#ids.prev('processIds')}" th:text="${p.processName}">CNC</label>
+                        </div>
+                    </div>
+                    <div class="text-danger small mt-1" th:if="${#fields.hasErrors('processIds')}" th:errors="*{processIds}"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Materials it can work with</label>
+                    <div class="check-grid" th:classappend="${#fields.hasErrors('materialIds')} ? 'has-error'">
+                        <div class="form-check" th:each="mat : ${materials}">
+                            <input class="form-check-input" type="checkbox" th:field="*{materialIds}" th:value="${mat.id}">
+                            <label class="form-check-label" th:for="${#ids.prev('materialIds')}" th:text="${mat.materialName}">Steel</label>
+                        </div>
+                    </div>
+                    <div class="text-danger small mt-1" th:if="${#fields.hasErrors('materialIds')}" th:errors="*{materialIds}"></div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-forge px-4" data-loading-text="Saving..."
+                        th:text="${machineId == null} ? 'Add machine' : 'Save changes'">Save</button>
+                <a class="btn btn-ghost" th:href="@{/manufacturer/machines}">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Quotations · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Quotations received</h1>
+            <p class="page-subtitle">All offers on your RFQs. Open an RFQ to compare its quotations side by side.</p>
+        </div>
+    </div>
+
+    <div class="ft-card">
+        <div class="table-responsive" th:if="${!page.isEmpty()}">
+            <table class="table table-ft table-hover">
+                <thead>
+                <tr><th>Quotation</th><th>RFQ</th><th>Manufacturer</th><th class="text-end">Total</th><th>Lead time</th><th>Valid until</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="q : ${page.content}">
+                    <td>
+                        <a th:href="@{/buyer/quotations/{id}(id=${q.quotationId})}" th:text="${q.quotationNumber}">QTN</a>
+                        <small th:if="${q.versionNumber > 1}" th:text="${' v' + q.versionNumber}"> v2</small>
+                    </td>
+                    <td>
+                        <a th:href="@{/buyer/rfqs/{id}(id=${q.rfqId})}" th:text="${q.rfqTitle}">RFQ</a><br>
+                        <small th:text="${q.rfqNumber}">RFQ-...</small>
+                    </td>
+                    <td th:text="${q.manufacturerName}">Manufacturer</td>
+                    <td class="text-end fw-semibold" th:text="${@fmt.money(q.totalAmount, q.currency)}">₹0</td>
+                    <td th:text="${q.leadTimeDays + ' days'}">14 days</td>
+                    <td>
+                        <span th:text="${@fmt.date(q.validUntil)}">date</span>
+                        <small class="text-danger d-block" th:if="${q.expired and q.status.name() == 'SUBMITTED'}">Expired</small>
+                    </td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${q.status})}"></span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${page.isEmpty()}"><div th:replace="~{fragments/empty-state :: empty('bi-cash-stack', 'No quotations yet', 'Quotations appear here when manufacturers respond to your RFQs.', '/buyer/rfqs/new', 'Create an RFQ')}"></div></th:block>
+    </div>
+
+    <nav th:replace="~{fragments/pagination :: pagination(${page}, '/buyer/quotations')}"></nav>
+</div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/public :: layout(~{::title}, ~{::content})}">
+<head><title>How it works · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <section class="section pt-5">
+        <div class="container">
+            <span class="eyebrow">How it works</span>
+            <h1 class="section-title mb-2">One workflow for buyers, manufacturers and quality teams</h1>
+            <p class="section-lead mb-5">Each step creates a record that stays linked to the order and the batch.</p>
+
+            <h2 class="h4 mb-3"><i class="bi bi-bag-check text-info me-2"></i>For buyers</h2>
+            <div class="row g-4 mb-5">
+                <div class="col-md-3"><div class="feature-card"><div class="step-number">1</div><h3>Register</h3><p>Create a buyer account for your company in a few minutes.</p></div></div>
+                <div class="col-md-3"><div class="feature-card"><div class="step-number">2</div><h3>Post an RFQ</h3><p>Choose a process and material, set quantity, delivery date and quote deadline.</p></div></div>
+                <div class="col-md-3"><div class="feature-card"><div class="step-number">3</div><h3>Accept the best quote</h3><p>Compare offers by total price and lead time. Accepting creates a production order.</p></div></div>
+                <div class="col-md-3"><div class="feature-card"><div class="step-number">4</div><h3>Track and receive</h3><p>Follow production, inspection and shipment. Scan the QR passport on delivery.</p></div></div>
+            </div>
+
+            <h2 class="h4 mb-3"><i class="bi bi-gear-wide-connected text-info me-2"></i>For manufacturers</h2>
+            <div class="row g-4 mb-5">
+                <div class="col-md-3"><div class="feature-card"><div class="step-number">1</div><h3>Get verified</h3><p>Register your facility and capabilities. An admin reviews and verifies your company.</p></div></div>
+                <div class="col-md-3"><div class="feature-card"><div class="step-number">2</div><h3>Add machines</h3><p>List machines one by one or import a CSV file. Set working hours and maintenance.</p></div></div>
+                <div class="col-md-3"><div class="feature-card"><div class="step-number">3</div><h3>Quote matching RFQs</h3><p>Only RFQs that match your processes and materials reach your inbox.</p></div></div>
+                <div class="col-md-3"><div class="feature-card"><div class="step-number">4</div><h3>Produce and ship</h3><p>Reserve machine time, create batches, send them for inspection and dispatch.</p></div></div>
+            </div>
+
+            <h2 class="h4 mb-3"><i class="bi bi-clipboard2-check text-info me-2"></i>Quality and traceability</h2>
+            <div class="row g-4">
+                <div class="col-md-4"><div class="feature-card"><h3>Measured inspections</h3><p>Inspectors record each measurement against its minimum and maximum. Any failed measurement blocks approval.</p></div></div>
+                <div class="col-md-4"><div class="feature-card"><h3>QR product passport</h3><p>Approved batches get a passport with a random, unguessable link. It shows only approved public information.</p></div></div>
+                <div class="col-md-4"><div class="feature-card"><h3>Recalls</h3><p>If a problem is found later, admins can recall a batch and every affected organization is notified.</p></div></div>
+            </div>
+            <p class="small text-muted-ft mt-4 mb-0">A ForgeTrace passport is a platform record, not an independent or government certification of product quality.</p>
+        </div>
+    </section>
+</div>
+</body>
+</html>

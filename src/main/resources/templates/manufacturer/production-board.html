@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Production board · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Production board</h1>
+            <p class="page-subtitle">All active orders by stage, earliest due date first. Open an order to move it forward.</p>
+        </div>
+        <a class="btn btn-ghost" th:href="@{/manufacturer/orders}"><i class="bi bi-list-ul me-1"></i> All orders</a>
+    </div>
+
+    <div class="board">
+        <div class="board-column" th:each="column : ${columns}">
+            <div class="board-column-header">
+                <h2><span th:replace="~{fragments/status-badge :: badge(${column.key})}"></span></h2>
+                <span class="chip mb-0" th:text="${#lists.size(column.value)}">0</span>
+            </div>
+
+            <a class="board-card" th:each="o : ${column.value}" th:href="@{/manufacturer/orders/{id}(id=${o.id})}">
+                <div class="card-number" th:text="${o.orderNumber}">ORD</div>
+                <div class="card-title" th:text="${o.rfqTitle}">Item</div>
+                <div class="card-meta" th:text="${o.buyerName}">Buyer</div>
+                <div class="card-meta" th:text="${o.quantity.stripTrailingZeros().toPlainString() + ' ' + o.quantityUnit + ' · ' + o.processName}">100 pcs</div>
+                <div class="card-meta mt-1">
+                    <i class="bi bi-flag"></i>
+                    <span th:classappend="${o.expectedCompletion != null and o.expectedCompletion.isBefore(T(java.time.LocalDate).now())} ? 'overdue'"
+                          th:text="${'Due ' + @fmt.localDate(o.expectedCompletion)}">Due date</span>
+                </div>
+            </a>
+
+            <p class="small text-muted-ft text-center mt-3 mb-0" th:if="${#lists.isEmpty(column.value)}">No orders</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/public :: layout(~{::title}, ~{::content})}">
+<head><title>Product passport · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <section class="section pt-5">
+        <div class="container" style="max-width: 960px;">
+            <div class="passport-hero mb-4">
+                <div class="row g-4 align-items-center">
+                    <div class="col-md-8">
+                        <span class="eyebrow"><i class="bi bi-qr-code-scan"></i> Product passport</span>
+                        <h1 class="section-title mb-2" th:text="${'Batch ' + p.batchNumber}">Batch</h1>
+                        <p class="mb-2" th:if="${p.valid}"><strong class="passport-valid"><i class="bi bi-patch-check-fill"></i> Inspected and approved</strong></p>
+                        <p class="mb-2" th:if="${p.recalled}"><strong class="passport-invalid"><i class="bi bi-exclamation-octagon-fill"></i> This batch has been recalled. Do not use it.</strong></p>
+                        <p class="mb-2" th:if="${p.revoked and !p.recalled}"><strong class="passport-invalid"><i class="bi bi-x-octagon-fill"></i> This passport has been revoked.</strong></p>
+                        <p class="text-muted-ft mb-0" th:text="${'Published ' + @fmt.date(p.publishedAt)}">date</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <div class="qr-box"><img th:src="@{/p/{t}/qr.png(t=${p.token})}" alt="QR code linking to this passport"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <h2 class="h5 mb-3">Batch</h2>
+                        <dl class="row mb-0">
+                            <dt class="col-6 text-muted-ft">Quantity</dt><dd class="col-6" th:text="${p.quantity.stripTrailingZeros().toPlainString() + ' ' + p.quantityUnit}">50</dd>
+                            <dt class="col-6 text-muted-ft">Manufactured</dt><dd class="col-6" th:text="${@fmt.localDate(p.manufactureDate)}">date</dd>
+                            <dt class="col-6 text-muted-ft">Process</dt><dd class="col-6" th:text="${p.processName}">CNC</dd>
+                            <dt class="col-6 text-muted-ft">Material</dt><dd class="col-6" th:text="${p.materialName}">Steel</dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <h2 class="h5 mb-3">Manufacturer</h2>
+                        <p class="mb-1 fw-semibold" th:text="${p.manufacturerName}">Mfr</p>
+                        <p class="mb-0 text-muted-ft" th:text="${p.manufacturerLocation} ?: ''">City</p>
+                        <p class="small text-muted-ft mt-2 mb-0"><i class="bi bi-patch-check"></i> Verified on ForgeTrace</p>
+                    </div>
+                </div>
+                <div class="col-12" th:if="${p.inspectedAt != null}">
+                    <div class="feature-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="h5 mb-0">Quality inspection</h2>
+                            <small class="text-muted-ft" th:text="${@fmt.dateTime(p.inspectedAt)}">date</small>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-ft">
+                                <thead><tr><th>Parameter</th><th>Allowed range</th><th>Measured</th><th>Result</th></tr></thead>
+                                <tbody>
+                                <tr th:each="m : ${p.measurements}">
+                                    <td th:text="${m.parameterName}">p</td>
+                                    <td th:text="${m.expectedMin.stripTrailingZeros().toPlainString() + ' – ' + m.expectedMax.stripTrailingZeros().toPlainString() + ' ' + m.unit}">r</td>
+                                    <td th:text="${m.actualValue.stripTrailingZeros().toPlainString() + ' ' + m.unit}">v</td>
+                                    <td th:classappend="${m.pass} ? 'measure-pass' : 'measure-fail'" th:text="${m.result.label}">Pass</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-4 no-print">
+                <button type="button" class="btn btn-ghost" onclick="window.print()"><i class="bi bi-printer me-1"></i> Print</button>
+                <button type="button" class="btn btn-ghost" th:attr="data-url=${passportUrl}"
+                        onclick="navigator.clipboard.writeText(this.dataset.url); this.textContent='Link copied';"><i class="bi bi-link-45deg me-1"></i> Copy link</button>
+            </div>
+            <p class="small text-muted-ft mt-4 mb-0">
+                This passport is a record of information entered on the ForgeTrace platform. It is not an independent,
+                third-party or government certification.
+            </p>
+        </div>
+    </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Order · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/buyer/orders}" class="small"><i class="bi bi-arrow-left"></i> Orders</a>
+            <h1 class="page-title mt-1">Order <span th:text="${order.orderNumber}">ORD</span></h1>
+            <p class="page-subtitle">
+                <a th:href="@{/buyer/rfqs/{id}(id=${order.rfqId})}" th:text="${order.rfqTitle}">RFQ</a>
+                · Quotation <span th:text="${order.quotationNumber}">QTN</span>
+            </p>
+        </div>
+        <span th:replace="~{fragments/status-badge :: badge(${order.status})}"></span>
+    </div>
+
+        <div class="d-flex flex-wrap gap-2 mb-4">
+        <a class="btn btn-forge" th:href="@{/buyer/orders/{id}/pay(id=${order.id})}"><i class="bi bi-credit-card me-1"></i> Payment</a>
+        <a class="btn btn-ghost" th:href="@{/buyer/orders/{id}/tracking(id=${order.id})}"><i class="bi bi-truck me-1"></i> Track shipment</a>
+        <a class="btn btn-ghost" th:href="@{/buyer/passports}"><i class="bi bi-qr-code me-1"></i> Passports</a>
+        <a th:if="${order.status.name() == 'COMPLETED'}" class="btn btn-ghost" th:href="@{/buyer/orders/{id}/review(id=${order.id})}"><i class="bi bi-star me-1"></i> Leave a review</a>
+        <a class="btn btn-ghost" th:href="@{/buyer/disputes(orderId=${order.id})}"><i class="bi bi-flag me-1"></i> Raise a dispute</a>
+    </div>
+
+    <!-- Key facts -->
+    <div class="ft-card mb-4">
+        <div class="order-facts">
+            <div><div class="fact-label">Manufacturer</div>
+                <div class="fact-value"><a th:href="@{/manufacturers/{id}(id=${order.manufacturerId})}" target="_blank" th:text="${order.manufacturerName}">Mfr</a></div></div>
+            <div><div class="fact-label">Quantity</div>
+                <div class="fact-value" th:text="${order.quantity.stripTrailingZeros().toPlainString() + ' ' + order.quantityUnit}">100 pcs</div></div>
+            <div><div class="fact-label">Process / material</div>
+                <div class="fact-value" th:text="${order.processName + ' · ' + order.materialName}">CNC</div></div>
+            <div><div class="fact-label">Total</div>
+                <div class="fact-value" th:text="${@fmt.money(order.totalAmount, order.currency)}">₹0</div></div>
+            <div><div class="fact-label">Expected completion</div>
+                <div class="fact-value" th:text="${@fmt.localDate(order.expectedCompletion)}">date</div></div>
+            <div><div class="fact-label">Ordered on</div>
+                <div class="fact-value" th:text="${@fmt.date(order.createdAt)}">date</div></div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-7">
+            <!-- Timeline -->
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3"><i class="bi bi-clock-history me-2"></i>Order timeline</h2>
+                <ul class="timeline">
+                    <li th:each="t : ${timeline}">
+                        <div class="tl-title" th:text="${t.newStatus.label}">Confirmed</div>
+                        <div class="tl-meta">
+                            <span th:text="${@fmt.dateTime(t.at)}">date</span> · <span th:text="${t.actorName}">name</span>
+                            <span th:if="${t.previousStatus != null}" th:text="${'· from ' + t.previousStatus.label}">from</span>
+                        </div>
+                        <div class="tl-note" th:if="${t.notes != null}" th:text="${t.notes}">Note</div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Machine schedule -->
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3"><i class="bi bi-calendar-week me-2"></i>Production schedule</h2>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(reservations)}">
+                    <table class="table table-ft">
+                        <thead><tr><th>Machine</th><th>From</th><th>To</th><th>Status</th></tr></thead>
+                        <tbody>
+                        <tr th:each="r : ${reservations}">
+                            <td th:text="${r.machineName}">Machine</td>
+                            <td th:text="${@fmt.dateTime(r.startAt)}">start</td>
+                            <td th:text="${@fmt.dateTime(r.endAt)}">end</td>
+                            <td><span th:replace="~{fragments/status-badge :: badge(${r.status})}"></span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="small text-muted-ft mb-0" th:if="${#lists.isEmpty(reservations)}">
+                    The manufacturer has not booked machine time yet.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-xl-5">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-2">Delivery address</h2>
+                <p class="mb-0" style="white-space: pre-line" th:text="${order.deliveryAddress}">Address</p>
+            </div>
+
+            <div class="ft-card mb-4" th:if="${canComplete}">
+                <h2 class="ft-card-title mb-2">Received everything?</h2>
+                <p class="small text-muted-ft">Confirm completion once you have received and checked the goods.</p>
+                <form th:action="@{/buyer/orders/{id}/complete(id=${order.id})}" method="post"
+                      data-confirm="Confirm this order is complete?">
+                    <button type="submit" class="btn btn-forge w-100"><i class="bi bi-check2-all me-1"></i> Mark as completed</button>
+                </form>
+            </div>
+
+            <div class="ft-card" th:if="${canCancel}">
+                <h2 class="ft-card-title mb-2">Cancel order</h2>
+                <p class="small text-muted-ft">You can cancel until the manufacturer schedules production.</p>
+                <form th:action="@{/buyer/orders/{id}/cancel(id=${order.id})}" method="post"
+                      data-confirm="Cancel this order? The manufacturer will be notified.">
+                    <input type="text" name="notes" class="form-control mb-2" maxlength="500" placeholder="Reason (optional)">
+                    <button type="submit" class="btn btn-ghost w-100 text-danger"><i class="bi bi-x-circle me-1"></i> Cancel order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

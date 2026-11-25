@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 48">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="4" width="40" height="40" rx="10" fill="url(#g)"/>
+  <path d="M12 35V13h14v5h-8v4h7v5h-7v8z" fill="#04121a"/>
+  <path d="M27 23h5v12h-5z" fill="#04121a" opacity=".55"/>
+  <text x="54" y="32" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#e6ebf5">ForgeTrace</text>
+</svg>

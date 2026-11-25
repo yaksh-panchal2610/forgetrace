@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>New recall · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/admin/batches}" class="small"><i class="bi bi-arrow-left"></i> Batches</a>
+            <h1 class="page-title mt-1">Recall batch <span th:text="${batch.batchNumber}">BAT</span></h1>
+            <p class="page-subtitle" th:text="${batch.manufacturerName + ' → ' + batch.buyerName + ' · ' + batch.itemTitle}">who</p>
+        </div>
+    </div>
+    <div class="ft-card" style="max-width: 720px;">
+        <div class="recall-alert mb-3 small">
+            The batch becomes <strong>Recalled</strong>, its public passport shows a recall warning,
+            and the buyer must acknowledge the notice. This cannot be undone.
+        </div>
+        <form th:action="@{/admin/recalls}" th:object="${form}" method="post" novalidate data-confirm="Issue this recall now?">
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+            </div>
+            <input type="hidden" th:field="*{batchId}">
+            <div class="mb-3">
+                <label class="form-label" for="severity">Severity</label>
+                <select th:field="*{severity}" class="form-select">
+                    <option th:each="s : ${severities}" th:value="${s}" th:text="${s.label}">High</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="reason">Reason</label>
+                <textarea th:field="*{reason}" rows="4" class="form-control" th:errorclass="is-invalid"
+                          placeholder="e.g. Material certificate found invalid; possible crack risk under load."></textarea>
+                <div class="invalid-feedback" th:errors="*{reason}"></div>
+            </div>
+            <button type="submit" class="btn btn-forge"><i class="bi bi-exclamation-octagon me-1"></i> Issue recall</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

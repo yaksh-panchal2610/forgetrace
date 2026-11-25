@@ -1,0 +1,45 @@
+services:
+  app:
+    image: ${APP_IMAGE:?set APP_IMAGE in .env}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_FORWARD_HEADERS_STRATEGY: framework 
+      SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"
+      APP_EXPORT_DIR: /app/exports
+      AWS_REGION: ${AWS_REGION:-ap-south-1}
+    volumes:
+      - exports:/app/exports
+    expose:
+      - "8080"
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION:-ap-south-1}
+        awslogs-group: /forgetrace/app
+        awslogs-create-group: "true"
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+    volumes:
+      - ./nginx/forgetrace.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION:-ap-south-1}
+        awslogs-group: /forgetrace/nginx
+        awslogs-create-group: "true"
+
+volumes:
+  exports:

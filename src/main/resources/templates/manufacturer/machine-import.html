@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Import machines · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/manufacturer/machines}" class="small"><i class="bi bi-arrow-left"></i> Machines</a>
+            <h1 class="page-title mt-1">Import machines from CSV</h1>
+            <p class="page-subtitle">Add many machines at once. Valid rows are imported; invalid rows are listed with the reason.</p>
+        </div>
+        <a class="btn btn-ghost" th:href="@{/manufacturer/machines/import/template}">
+            <i class="bi bi-filetype-csv me-1"></i> Download template
+        </a>
+    </div>
+
+    <!-- Result of the last import -->
+    <div th:if="${result != null}" class="ft-card mb-4">
+        <div class="row g-3 text-center mb-3">
+            <div class="col-4">
+                <div class="stat-value" th:text="${result.totalRows}">0</div>
+                <div class="stat-label">Rows in file</div>
+            </div>
+            <div class="col-4">
+                <div class="stat-value text-success" th:text="${result.imported}">0</div>
+                <div class="stat-label">Imported</div>
+            </div>
+            <div class="col-4">
+                <div class="stat-value" th:classappend="${result.hasErrors()} ? 'text-danger'" th:text="${result.failed()}">0</div>
+                <div class="stat-label">Rejected</div>
+            </div>
+        </div>
+
+        <div th:if="${result.imported > 0}" class="alert alert-success mb-3">
+            <i class="bi bi-check-circle me-2"></i>
+            <span th:text="${result.imported + ' machine(s) added.'}">Machines added.</span>
+            <a th:href="@{/manufacturer/machines}">View machines</a>
+        </div>
+
+        <div th:if="${result.hasErrors()}">
+            <h2 class="ft-card-title mb-2">Rows that were not imported</h2>
+            <div class="table-responsive">
+                <table class="table table-ft">
+                    <thead><tr><th style="width: 90px;">Line</th><th>Problem</th></tr></thead>
+                    <tbody>
+                    <tr th:each="e : ${result.errors}">
+                        <td th:text="${e.lineNumber}">2</td>
+                        <td th:text="${e.message}">Problem</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="small text-muted-ft mt-2 mb-0">Fix these lines in your file and upload only them again.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Upload -->
+        <div class="col-lg-5">
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Upload file</h2>
+                <form th:action="@{/manufacturer/machines/import}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label" for="file">CSV file</label>
+                        <input class="form-control" type="file" id="file" name="file" accept=".csv,text/csv" required>
+                        <div class="form-text text-muted-ft">UTF-8 CSV, up to 500 rows. Save from Excel as "CSV UTF-8".</div>
+                    </div>
+                    <button type="submit" class="btn btn-forge w-100" data-loading-text="Importing...">
+                        <i class="bi bi-upload me-1"></i> Import
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Format help -->
+        <div class="col-lg-7">
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">File format</h2>
+                <div class="table-responsive">
+                    <table class="table table-ft table-sm">
+                        <thead><tr><th>Column</th><th>Required</th><th>Example</th></tr></thead>
+                        <tbody>
+                        <tr><td><code>machine_name</code></td><td>Yes</td><td>VMC-850 Vertical Machining Centre</td></tr>
+                        <tr><td><code>machine_type</code></td><td>Yes</td><td>CNC Mill</td></tr>
+                        <tr><td><code>model_number</code></td><td>No</td><td>VMC-850</td></tr>
+                        <tr><td><code>serial_number</code></td><td>No</td><td>SN-VMC-001 (unique)</td></tr>
+                        <tr><td><code>capacity_value</code></td><td>No</td><td>850</td></tr>
+                        <tr><td><code>capacity_unit</code></td><td>If capacity set</td><td>mm travel</td></tr>
+                        <tr><td><code>status</code></td><td>No</td><td>ACTIVE, MAINTENANCE or INACTIVE</td></tr>
+                        <tr><td><code>location</code></td><td>No</td><td>Bay 1</td></tr>
+                        <tr><td><code>processes</code></td><td>Yes</td><td>CNC Machining;Welding</td></tr>
+                        <tr><td><code>materials</code></td><td>Yes</td><td>Mild Steel;Aluminium 6061</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="small mb-2">Separate several processes or materials with a semicolon <code>;</code>.
+                    Put values containing commas in double quotes.</p>
+                <p class="small mb-1 text-muted-ft">Processes you can use:</p>
+                <div><span class="chip" th:each="p : ${processes}" th:text="${p.processName}">CNC</span></div>
+                <p class="small mb-1 mt-2 text-muted-ft">Materials you can use:</p>
+                <div><span class="chip" th:each="mat : ${materials}" th:text="${mat.materialName}">Steel</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

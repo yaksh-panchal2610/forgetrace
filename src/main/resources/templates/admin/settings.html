@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Settings · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header"><div><h1 class="page-title">Settings</h1>
+        <p class="page-subtitle">Read-only. Change these in application properties or environment variables.</p></div></div>
+    <div class="ft-card mb-4">
+        <dl class="row detail-list mb-0">
+            <th:block th:each="c : ${config}">
+                <dt class="col-sm-4" th:text="${c.key}">k</dt><dd class="col-sm-8"><code th:text="${c.value}">v</code></dd>
+            </th:block>
+        </dl>
+    </div>
+    <div class="ft-card">
+        <h2 class="ft-card-title mb-3">Contact requests</h2>
+        <div class="table-responsive" th:if="${!page.isEmpty()}">
+            <table class="table table-ft">
+                <thead><tr><th>From</th><th>Subject</th><th>Message</th><th>Received</th><th>Status</th></tr></thead>
+                <tbody>
+                <tr th:each="c : ${page.content}">
+                    <td><span th:text="${c.name}">n</span><br><a class="small" th:href="${'mailto:' + c.email}" th:text="${c.email}">e</a></td>
+                    <td th:text="${c.subject}">s</td>
+                    <td class="small" style="max-width: 320px; white-space: pre-line" th:text="${c.message}">m</td>
+                    <td th:text="${@fmt.dateTime(c.createdAt)}">d</td>
+                    <td>
+                        <form th:action="@{/admin/contacts/{id}/status(id=${c.id})}" method="post">
+                            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option th:each="s : ${contactStatuses}" th:value="${s}" th:text="${s.label}" th:selected="${s == c.status}">New</option>
+                            </select>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="small text-muted-ft mb-0" th:if="${page.isEmpty()}">No contact requests yet.</p>
+    </div>
+    <nav th:replace="~{fragments/pagination :: pagination(${page}, '/admin/settings')}"></nav>
+</div>
+</body>
+</html>

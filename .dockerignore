@@ -1,0 +1,13 @@
+target/
+.git/
+.github/
+.idea/
+.vscode/
+uploads/
+exports/
+logs/
+docs/
+deploy/
+*.md
+.env
+.env.*

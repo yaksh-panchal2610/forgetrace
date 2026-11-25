@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>RFQs · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Requests for quotation</h1>
+            <p class="page-subtitle">Each RFQ goes to verified manufacturers that offer the process and material you need.</p>
+        </div>
+        <a class="btn btn-forge" th:href="@{/buyer/rfqs/new}"><i class="bi bi-plus-lg me-1"></i> New RFQ</a>
+    </div>
+
+    <div class="ft-card">
+        <div class="table-responsive" th:if="${!page.isEmpty()}">
+            <table class="table table-ft table-hover">
+                <thead>
+                <tr><th>RFQ</th><th>Process / material</th><th>Quantity</th><th>Quote deadline</th><th>Quotes</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${page.content}">
+                    <td>
+                        <a th:href="@{/buyer/rfqs/{id}(id=${r.id})}" th:text="${r.title}">Title</a><br>
+                        <small th:text="${r.rfqNumber}">RFQ-2026-XXXX</small>
+                    </td>
+                    <td>
+                        <span th:text="${r.processName}">CNC</span><br>
+                        <small th:text="${r.materialName}">Steel</small>
+                    </td>
+                    <td th:text="${r.quantity.stripTrailingZeros().toPlainString() + ' ' + r.quantityUnit}">100 pcs</td>
+                    <td>
+                        <span th:text="${@fmt.dateTime(r.quoteDeadline)}">date</span><br>
+                        <small th:text="${@fmt.timeLeft(r.quoteDeadline)}">3 days left</small>
+                    </td>
+                    <td>
+                        <span class="chip mb-0" th:text="${r.quotationCount}">0</span>
+                    </td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${r.status})}"></span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${page.isEmpty()}"><div th:replace="~{fragments/empty-state :: empty('bi-file-earmark-plus', 'No RFQs yet', 'Describe the part you need and receive quotations from verified manufacturers.', '/buyer/rfqs/new', 'Create your first RFQ')}"></div></th:block>
+    </div>
+
+    <nav th:replace="~{fragments/pagination :: pagination(${page}, '/buyer/rfqs')}"></nav>
+</div>
+</body>
+</html>

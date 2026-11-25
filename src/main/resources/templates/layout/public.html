@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org"
+      th:fragment="layout(title, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:replace="${title}">ForgeTrace</title>
+    <meta name="description" content="ForgeTrace connects industrial buyers with verified manufacturers, with production tracking and QR batch passports.">
+    <th:block th:replace="~{fragments/head :: assets}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/public.css}">
+</head>
+<body class="public-body">
+<header th:replace="~{fragments/public-navbar :: navbar}"></header>
+<main>
+    <div class="container mt-3" th:if="${success != null or error != null}">
+        <div th:replace="~{fragments/flash-messages :: flash}"></div>
+    </div>
+    <div th:replace="${content}"></div>
+</main>
+<footer th:replace="~{fragments/public-footer :: footer}"></footer>
+<th:block th:replace="~{fragments/head :: scripts}"></th:block>
+</body>
+</html>

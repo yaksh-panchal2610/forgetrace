@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Quotation | ForgeTrace</title></head>
+<body>
+<div th:fragment="content"
+     th:with="canAccept=${q.status != null and q.status.name() == 'SUBMITTED' and !q.expired}">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/buyer/rfqs/{id}(id=${rfq.id})}" class="small"><i class="bi bi-arrow-left"></i> <span th:text="${rfq.title}">RFQ</span></a>
+            <h1 class="page-title mt-1">
+                Quotation <span th:text="${q.quotationNumber}">QTN</span>
+                <small class="text-muted-ft fs-6" th:if="${q.versionNumber > 1}" th:text="${'version ' + q.versionNumber}">v2</small>
+            </h1>
+            <p class="page-subtitle">
+                From <a th:href="@{/manufacturers/{id}(id=${q.manufacturerId})}" target="_blank" th:text="${q.manufacturerName}">Manufacturer</a>
+                | Submitted <span th:text="${q.submittedAt != null} ? ${@fmt.dateTime(q.submittedAt)} : '-'">date</span>
+            </p>
+        </div>
+        <span th:replace="~{fragments/status-badge :: badge(${q.status})}"></span>
+    </div>
+
+    <div class="banner-warn" th:if="${q.expired and q.status != null and q.status.name() == 'SUBMITTED'}">
+        <i class="bi bi-clock-history"></i>
+        <div>This quotation has expired and can no longer be accepted.</div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="ft-card mb-4">
+                <h2 class="ft-card-title mb-3">Price breakdown</h2>
+                <div class="price-box">
+                    <div class="row-line">
+                        <span>Unit price x <span th:text="${rfq.quantity.stripTrailingZeros().toPlainString() + ' ' + rfq.quantityUnit}">100 pcs</span></span>
+                        <span><span th:text="${@fmt.money(q.unitPrice, q.currency)}">0</span> each</span>
+                    </div>
+                    <div class="row-line"><span>One-time setup fee</span><span th:text="${q.setupFee != null} ? ${@fmt.money(q.setupFee, q.currency)} : '-'">0</span></div>
+                    <div class="row-line"><span>Tax (GST)</span><span th:text="${q.taxAmount != null} ? ${@fmt.money(q.taxAmount, q.currency)} : '-'">0</span></div>
+                    <div class="row-line total-line"><span>Total payable</span><span th:text="${@fmt.money(q.totalAmount, q.currency)}">0</span></div>
+                </div>
+                <p class="small text-muted-ft mt-2 mb-0">This is the full price. ForgeTrace adds no hidden charges.</p>
+            </div>
+
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Terms from the manufacturer</h2>
+                <p class="mb-0" style="white-space: pre-line" th:text="${q.terms} ?: 'No additional terms.'">Terms</p>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="ft-card mb-4">
+                <dl class="detail-list mb-0">
+                    <dt>Lead time</dt><dd th:text="${q.leadTimeDays + ' days after order confirmation'}">14 days</dd>
+                    <dt>Valid until</dt><dd th:text="${q.validUntil != null} ? ${@fmt.dateTime(q.validUntil)} : '-'">date</dd>
+                    <dt>Required delivery (your RFQ)</dt><dd th:text="${rfq.deliveryDate != null} ? ${@fmt.localDate(rfq.deliveryDate)} : '-'">date</dd>
+                    <dt>Manufacturer rating</dt>
+                    <dd th:if="${q.manufacturerRating != null}"><span th:text="${@fmt.rating(q.manufacturerRating)}">4.5</span> / 5</dd>
+                    <dd th:if="${q.manufacturerRating == null}">No reviews yet</dd>
+                </dl>
+            </div>
+
+            <div class="ft-card" th:if="${canAccept}">
+                <h2 class="ft-card-title mb-2">Decision</h2>
+                <p class="small text-muted-ft">Accepting creates a production order with this manufacturer and closes all other quotations on this RFQ.</p>
+                <form th:action="@{/buyer/orders}" method="post" class="mb-2"
+                      data-confirm="Accept this quotation? A production order will be created and the other quotations will be closed.">
+                    <input type="hidden" name="quotationId" th:value="${q.quotationId}">
+                    <button type="submit" class="btn btn-forge w-100"><i class="bi bi-check2-circle me-1"></i> Accept quotation</button>
+                </form>
+                <form th:action="@{/buyer/quotations/{id}/reject(id=${q.quotationId})}" method="post"
+                      data-confirm="Decline this quotation? The manufacturer will be informed.">
+                    <button type="submit" class="btn btn-ghost w-100">Decline</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

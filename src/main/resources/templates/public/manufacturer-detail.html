@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/public :: layout(~{::title}, ~{::content})}">
+<head><title>Manufacturer profile · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <section class="section pt-5">
+        <div class="container">
+            <a th:href="@{/manufacturers}" class="small"><i class="bi bi-arrow-left"></i> All manufacturers</a>
+
+            <div class="row g-4 mt-1">
+                <div class="col-lg-8">
+                    <div class="feature-card">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                            <div>
+                                <h1 class="section-title mb-1" th:text="${m.displayName}">Company</h1>
+                                <p class="text-muted-ft mb-0">
+                                    <i class="bi bi-geo-alt"></i> <span th:text="${m.location}">City</span>
+                                    · Member since <span th:text="${@fmt.date(m.memberSince)}">2026</span>
+                                </p>
+                            </div>
+                            <span class="status-badge status-verified">Verified manufacturer</span>
+                        </div>
+
+                        <h2 class="h5 mt-4">About</h2>
+                        <p th:text="${m.description} ?: 'This manufacturer has not added a description yet.'">Description</p>
+
+                        <h2 class="h5 mt-4">Processes</h2>
+                        <div><span class="chip" th:each="p : ${m.processes}" th:text="${p}">CNC</span></div>
+
+                        <h2 class="h5 mt-3">Materials</h2>
+                        <div><span class="chip" th:each="mat : ${m.materials}" th:text="${mat}">Steel</span></div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="feature-card mb-4">
+                        <div class="row text-center g-3">
+                            <div class="col-4">
+                                <div class="fs-4 fw-bold" th:text="${m.activeMachines}">0</div>
+                                <div class="small text-muted-ft">Active machines</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="fs-4 fw-bold" th:text="${m.yearsInOperation} ?: '—'">0</div>
+                                <div class="small text-muted-ft">Years</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="fs-4 fw-bold rating" th:text="${@fmt.rating(m.averageRating)} ?: '—'">—</div>
+                                <div class="small text-muted-ft" th:text="${m.reviewCount + ' review(s)'}">0 reviews</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <h2 class="h6">Need parts made?</h2>
+                        <th:block th:if="${navRole == 'BUYER'}">
+                            <p class="small">Post an RFQ for this process. All matching verified manufacturers, including this one, will be invited to quote.</p>
+                            <a class="btn btn-forge w-100" th:href="@{/buyer/rfqs/new}">Create an RFQ</a>
+                        </th:block>
+                        <th:block th:if="${navRole == null}">
+                            <p class="small">Sign in as a buyer to request quotations.</p>
+                            <a class="btn btn-forge w-100 mb-2" th:href="@{/auth/register/buyer}">Create buyer account</a>
+                            <a class="btn btn-ghost w-100" th:href="@{/auth/login}">Sign in</a>
+                        </th:block>
+                        <p th:if="${navRole != null and navRole != 'BUYER'}" class="small mb-0">Only buyer accounts can request quotations.</p>
+                        <a th:if="${m.websiteUrl != null}" th:href="${m.websiteUrl}" target="_blank" rel="noopener noreferrer"
+                           class="d-block small mt-3"><i class="bi bi-box-arrow-up-right"></i> Company website</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Admin dashboard · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div><h1 class="page-title">Admin dashboard</h1><p class="page-subtitle">Platform overview</p></div>
+        <a class="btn btn-forge" th:href="@{/admin/reports}"><i class="bi bi-file-earmark-bar-graph me-1"></i> Reports</a>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-3"><a class="text-decoration-none" th:href="@{/admin/verifications}"><div class="stat-card"><div class="stat-icon warn"><i class="bi bi-patch-check"></i></div>
+            <div><div class="stat-value" th:text="${dash.pendingVerifications}">0</div><div class="stat-label">Pending verifications</div></div></div></a></div>
+        <div class="col-md-3"><a class="text-decoration-none" th:href="@{/admin/orders}"><div class="stat-card"><div class="stat-icon"><i class="bi bi-box-seam"></i></div>
+            <div><div class="stat-value" th:text="${dash.activeOrders}">0</div><div class="stat-label">Active orders</div></div></div></a></div>
+        <div class="col-md-3"><a class="text-decoration-none" th:href="@{/admin/disputes}"><div class="stat-card"><div class="stat-icon warn"><i class="bi bi-flag"></i></div>
+            <div><div class="stat-value" th:text="${dash.openDisputes}">0</div><div class="stat-label">Open disputes</div></div></div></a></div>
+        <div class="col-md-3"><a class="text-decoration-none" th:href="@{/admin/recalls}"><div class="stat-card"><div class="stat-icon warn"><i class="bi bi-exclamation-octagon"></i></div>
+            <div><div class="stat-value" th:text="${dash.activeRecalls}">0</div><div class="stat-label">Active recalls</div></div></div></a></div>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="stat-card"><div class="stat-icon ok"><i class="bi bi-buildings"></i></div>
+            <div><div class="stat-value" th:text="${dash.verifiedManufacturers}">0</div><div class="stat-label">Verified manufacturers</div></div></div></div>
+        <div class="col-md-3"><a class="text-decoration-none" th:href="@{/admin/users}"><div class="stat-card"><div class="stat-icon ok"><i class="bi bi-people"></i></div>
+            <div><div class="stat-value" th:text="${dash.activeUsers}">0</div><div class="stat-label" th:text="${'Active users · ' + dash.suspendedUsers + ' suspended'}">Active users</div></div></div></a></div>
+        <div class="col-md-3"><div class="stat-card"><div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
+            <div><div class="stat-value" th:text="${dash.awaitingInspection}">0</div><div class="stat-label">Batches awaiting inspection</div></div></div></div>
+        <div class="col-md-3"><a class="text-decoration-none" th:href="@{/admin/settings}"><div class="stat-card"><div class="stat-icon"><i class="bi bi-envelope"></i></div>
+            <div><div class="stat-value" th:text="${dash.newContacts}">0</div><div class="stat-label">New contact requests</div></div></div></a></div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="ft-card">
+                <h2 class="ft-card-title mb-3">Orders by status</h2>
+                <div class="chart-box"><canvas id="ordersChart" aria-label="Bar chart of orders by status"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="ft-card">
+                <div class="ft-card-header mb-3">
+                    <h2 class="ft-card-title">Payments, last 14 days</h2>
+                    <strong th:text="${@fmt.money(dash.revenue14d, 'INR')}">₹0</strong>
+                </div>
+                <div class="chart-box"><canvas id="revenueChart" aria-label="Line chart of daily payments"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ft-card">
+        <div class="ft-card-header"><h2 class="ft-card-title">Recent activity</h2><a class="small" th:href="@{/admin/audit-logs}">Audit log</a></div>
+        <div class="table-responsive">
+            <table class="table table-ft table-sm">
+                <thead><tr><th>Time</th><th>Who</th><th>Action</th><th>Entity</th><th>Details</th></tr></thead>
+                <tbody>
+                <tr th:each="a : ${dash.recentActivity}">
+                    <td class="text-nowrap" th:text="${@fmt.dateTime(a.time)}">t</td>
+                    <td th:text="${a.actor}">who</td>
+                    <td><code th:text="${a.action}">ACTION</code></td>
+                    <td th:text="${a.entityType + (a.entityId != null ? ' #' + a.entityId : '')}">Order #1</td>
+                    <td class="text-truncate" style="max-width: 280px" th:text="${a.details} ?: ''">d</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        window.ftCharts = {
+            statusLabels: /*[[${dash.statusLabels}]]*/ [],
+            statusCounts: /*[[${dash.statusCounts}]]*/ [],
+            dayLabels: /*[[${dash.dayLabels}]]*/ [],
+            dayAmounts: /*[[${dash.dayAmounts}]]*/ []
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script th:src="@{/js/charts.js}"></script>
+</div>
+</body>
+</html>

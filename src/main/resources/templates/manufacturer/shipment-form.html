@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>New shipment · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <a th:href="@{/manufacturer/shipments}" class="small"><i class="bi bi-arrow-left"></i> Shipments</a>
+            <h1 class="page-title mt-1">New shipment</h1>
+            <p class="page-subtitle">All approved batches of the order are included. The order moves to Shipped.</p>
+        </div>
+    </div>
+
+    <div class="ft-card" style="max-width: 720px;">
+        <th:block th:if="${#lists.isEmpty(orders)}"><div th:replace="~{fragments/empty-state :: empty('bi-box-seam', 'No order is ready to ship', 'Move an order to Ready to ship after its batches are approved.', '/manufacturer/orders', 'Open orders')}"></div></th:block>
+
+        <form th:if="${!#lists.isEmpty(orders)}" th:action="@{/manufacturer/shipments}" th:object="${form}" method="post" novalidate>
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="orderId">Order</label>
+                <select th:field="*{orderId}" class="form-select" th:errorclass="is-invalid">
+                    <option th:each="o : ${orders}" th:value="${o.id}"
+                            th:text="${o.orderNumber + ' · ' + o.title + ' · ' + o.buyerName + (o.paid ? ' (paid)' : ' (NOT PAID)')}">ORD</option>
+                </select>
+                <div class="invalid-feedback" th:errors="*{orderId}"></div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="carrierName">Carrier</label>
+                    <input type="text" th:field="*{carrierName}" class="form-control" th:errorclass="is-invalid" placeholder="e.g. Blue Dart, Delhivery, own truck">
+                    <div class="invalid-feedback" th:errors="*{carrierName}"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="trackingNumber">Tracking / AWB number <span class="text-muted-ft">(optional)</span></label>
+                    <input type="text" th:field="*{trackingNumber}" class="form-control" th:errorclass="is-invalid">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="dispatchDate">Dispatch date</label>
+                    <input type="date" th:field="*{dispatchDate}" class="form-control" th:errorclass="is-invalid">
+                    <div class="invalid-feedback" th:errors="*{dispatchDate}"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="expectedDelivery">Expected delivery <span class="text-muted-ft">(optional)</span></label>
+                    <input type="date" th:field="*{expectedDelivery}" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="location">Dispatched from <span class="text-muted-ft">(optional)</span></label>
+                    <input type="text" th:field="*{location}" class="form-control" placeholder="City / warehouse">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="remarks">Remarks <span class="text-muted-ft">(optional)</span></label>
+                    <input type="text" th:field="*{remarks}" class="form-control">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-forge px-4 mt-4" data-loading-text="Dispatching...">Dispatch shipment</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

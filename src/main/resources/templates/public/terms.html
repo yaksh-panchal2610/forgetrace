@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/public :: layout(~{::title}, ~{::content})}">
+<head><title>Terms of use · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <section class="section pt-5">
+        <div class="container content-page">
+            <span class="eyebrow">Legal</span>
+            <h1 class="section-title">Terms of use</h1>
+            <p class="legal-note">
+                Prototype document prepared for a university project. It must be reviewed by a qualified legal
+                advisor before commercial use.
+            </p>
+
+            <h2>1. The service</h2>
+            <p>
+                ForgeTrace is a platform that connects buyers with manufacturers and records production, inspection and
+                delivery information. ForgeTrace is not a party to the contract between a buyer and a manufacturer.
+            </p>
+
+            <h2>2. Accounts</h2>
+            <ul>
+                <li>You must give accurate information and keep your password secret.</li>
+                <li>Manufacturers must be verified before they can receive RFQs. Verification is a platform check, not a guarantee of quality.</li>
+                <li>We may suspend accounts that provide false information or misuse the platform.</li>
+            </ul>
+
+            <h2>3. RFQs, quotations and orders</h2>
+            <ul>
+                <li>A quotation is valid until its expiry date. Expired quotations cannot be accepted.</li>
+                <li>Accepting a quotation creates a production order between the buyer and the manufacturer.</li>
+                <li>Prices are shown in full, including setup fee and tax, before you accept. There are no hidden charges.</li>
+            </ul>
+
+            <h2>4. Payments</h2>
+            <p>In this prototype, payments run in test (sandbox) mode only. No real money is charged.</p>
+
+            <h2>5. Drawings and intellectual property</h2>
+            <p>
+                Buyers keep ownership of the drawings and specifications they upload. Manufacturers may use them only
+                to prepare a quotation and to fulfil an accepted order.
+            </p>
+
+            <h2>6. Reviews</h2>
+            <p>
+                Only buyers with a real order can review the manufacturer for that order, once per order.
+                Fake, paid or misleading reviews are not allowed and will be removed.
+            </p>
+
+            <h2>7. Product passports</h2>
+            <p>
+                A ForgeTrace product passport is a record of information entered on the platform. It is not an
+                independent, third-party or government certification.
+            </p>
+
+            <h2>8. Contact</h2>
+            <p>Questions about these terms can be sent through the <a th:href="@{/contact}">contact page</a>.</p>
+        </div>
+    </section>
+</div>
+</body>
+</html>

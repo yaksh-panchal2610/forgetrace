@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Dashboard · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="${'Welcome, ' + currentUser.fullName}">Welcome</h1>
+            <p class="page-subtitle" th:text="${dash.organizationName}">Company</p>
+        </div>
+        <a class="btn btn-forge" th:href="@{/buyer/rfqs/new}"><i class="bi bi-plus-lg me-1"></i> New RFQ</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+                <div><div class="stat-value" th:text="${dash.openRfqs}">0</div><div class="stat-label">Open RFQs</div></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon warn"><i class="bi bi-gear-wide-connected"></i></div>
+                <div><div class="stat-value" th:text="${dash.activeOrders}">0</div><div class="stat-label">Orders in progress</div></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon ok"><i class="bi bi-check2-circle"></i></div>
+                <div><div class="stat-value" th:text="${dash.completedOrders}">0</div><div class="stat-label">Delivered orders</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <a class="quick-action" th:href="@{/buyer/rfqs/new}"><i class="bi bi-plus-square"></i>
+                <span>Create an RFQ<small>Describe the part you need</small></span></a>
+        </div>
+        <div class="col-md-4">
+            <a class="quick-action" th:href="@{/manufacturers}"><i class="bi bi-buildings"></i>
+                <span>Browse manufacturers<small>Verified suppliers only</small></span></a>
+        </div>
+        <div class="col-md-4">
+            <a class="quick-action" th:href="@{/buyer/passports}"><i class="bi bi-qr-code"></i>
+                <span>Product passports<small>Traceability for delivered batches</small></span></a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent RFQs -->
+        <div class="col-xl-6">
+            <div class="ft-card h-100">
+                <div class="ft-card-header">
+                    <h2 class="ft-card-title">Recent RFQs</h2>
+                    <a th:href="@{/buyer/rfqs}" class="small">View all</a>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(dash.recentRfqs)}">
+                    <table class="table table-ft table-hover">
+                        <thead><tr><th>RFQ</th><th>Process</th><th>Deadline</th><th>Status</th></tr></thead>
+                        <tbody>
+                        <tr th:each="r : ${dash.recentRfqs}">
+                            <td>
+                                <a th:href="@{/buyer/rfqs/{id}(id=${r.id})}" th:text="${r.title}">Title</a><br>
+                                <small th:text="${r.rfqNumber}">RFQ-2026-000001</small>
+                            </td>
+                            <td th:text="${r.processName}">CNC</td>
+                            <td>
+                                <span th:text="${@fmt.date(r.quoteDeadline)}">date</span><br>
+                                <small th:text="${@fmt.timeLeft(r.quoteDeadline)}">3 days left</small>
+                            </td>
+                            <td><span th:replace="~{fragments/status-badge :: badge(${r.status})}"></span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <th:block th:if="${#lists.isEmpty(dash.recentRfqs)}"><div th:replace="~{fragments/empty-state :: empty('bi-file-earmark-plus', 'No RFQs yet', 'Create an RFQ to start receiving quotations from verified manufacturers.', '/buyer/rfqs/new', 'Create RFQ')}"></div></th:block>
+            </div>
+        </div>
+
+        <!-- Recent orders -->
+        <div class="col-xl-6">
+            <div class="ft-card h-100">
+                <div class="ft-card-header">
+                    <h2 class="ft-card-title">Recent orders</h2>
+                    <a th:href="@{/buyer/orders}" class="small">View all</a>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(dash.recentOrders)}">
+                    <table class="table table-ft table-hover">
+                        <thead><tr><th>Order</th><th>Manufacturer</th><th>Total</th><th>Status</th></tr></thead>
+                        <tbody>
+                        <tr th:each="o : ${dash.recentOrders}">
+                            <td><a th:href="@{/buyer/orders/{id}(id=${o.id})}" th:text="${o.orderNumber}">ORD</a></td>
+                            <td th:text="${o.counterpartyName}">Manufacturer</td>
+                            <td th:text="${@fmt.money(o.totalAmount, o.currency)}">₹0</td>
+                            <td><span th:replace="~{fragments/status-badge :: badge(${o.status})}"></span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <th:block th:if="${#lists.isEmpty(dash.recentOrders)}"><div th:replace="~{fragments/empty-state :: empty('bi-box-seam', 'No orders yet', 'Orders appear here after you accept a quotation.', null, null)}"></div></th:block>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

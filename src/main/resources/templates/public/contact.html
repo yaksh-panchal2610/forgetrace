@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/public :: layout(~{::title}, ~{::content})}">
+<head><title>Contact | ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <section class="section pt-5">
+        <div class="container">
+            <div class="row g-5 align-items-start">
+
+                <!-- Left: info (natural height, stays beside the form while scrolling) -->
+                <div class="col-lg-5">
+                    <div class="contact-aside">
+                        <span class="eyebrow">Contact</span>
+                        <h1 class="section-title">Talk to the ForgeTrace team</h1>
+                        <p class="section-lead">Questions about sourcing, listing your facility or verification? Send us a message and we will reply by email.</p>
+
+                            <div class="feature-card mt-4" style="height:auto !important; min-height:0 !important;">
+                            <p class="mb-2"><i class="bi bi-clock me-2 text-info"></i>We usually reply within 2 working days.</p>
+                            <p class="mb-2"><i class="bi bi-calendar-week me-2 text-info"></i>Monday to Saturday, 9:30 am to 6:30 pm IST.</p>
+                            <p class="mb-0"><i class="bi bi-shield-lock me-2 text-info"></i>Your message is used only to reply to you. See our <a th:href="@{/privacy}">privacy notice</a>.</p>
+                        </div>
+
+                        <div class="feature-card h-auto mt-3">
+                            <h2 class="h6 mb-3">Before you write</h2>
+                            <a class="contact-link" th:href="@{/how-it-works}">
+                                <i class="bi bi-diagram-3 text-info"></i>
+                                <span><strong>How it works</strong><small>RFQs, quotations, inspection and QR passports</small></span>
+                            </a>
+                            <a class="contact-link" th:href="@{/manufacturers}">
+                                <i class="bi bi-buildings text-info"></i>
+                                <span><strong>Find manufacturers</strong><small>Browse verified suppliers by process and material</small></span>
+                            </a>
+                            <a class="contact-link" th:href="@{/auth/register}">
+                                <i class="bi bi-person-plus text-info"></i>
+                                <span><strong>Create an account</strong><small>Buyers and manufacturers sign up for free</small></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: form -->
+                <div class="col-lg-7">
+                    <div class="feature-card h-auto">
+                        <div th:if="${param.sent}" class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>Thank you. Your message has been received.
+                        </div>
+
+                        <form th:action="@{/contact}" th:object="${form}" method="post" novalidate>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="name">Name</label>
+                                    <input type="text" th:field="*{name}" class="form-control" th:errorclass="is-invalid" autocomplete="name" maxlength="120">
+                                    <div class="invalid-feedback" th:errors="*{name}"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="email">Email</label>
+                                    <input type="email" th:field="*{email}" class="form-control" th:errorclass="is-invalid" autocomplete="email" maxlength="160">
+                                    <div class="invalid-feedback" th:errors="*{email}"></div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="subject">Subject</label>
+                                    <input type="text" th:field="*{subject}" class="form-control" th:errorclass="is-invalid" maxlength="160"
+                                           placeholder="e.g. Verification of my manufacturing unit">
+                                    <div class="invalid-feedback" th:errors="*{subject}"></div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="message">Message</label>
+                                    <textarea th:field="*{message}" rows="6" class="form-control" th:errorclass="is-invalid" maxlength="4000"
+                                              placeholder="Tell us what you need help with..."></textarea>
+                                    <div class="invalid-feedback" th:errors="*{message}"></div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input type="checkbox" th:field="*{consent}" class="form-check-input" th:errorclass="is-invalid">
+                                        <label class="form-check-label" th:for="${#ids.prev('consent')}">
+                                            I agree that ForgeTrace may store this message to reply to me.
+                                        </label>
+                                        <div class="invalid-feedback" th:errors="*{consent}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-forge px-4 mt-4" data-loading-text="Sending...">
+                                <i class="bi bi-send me-1"></i> Send message
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

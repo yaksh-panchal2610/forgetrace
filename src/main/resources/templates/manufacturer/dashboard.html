@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Dashboard · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="${'Welcome, ' + currentUser.fullName}">Welcome</h1>
+            <p class="page-subtitle" th:text="${dash.organizationName}">Company</p>
+        </div>
+        <span th:replace="~{fragments/status-badge :: badge(${dash.verificationStatus})}"></span>
+    </div>
+
+    <!-- Verification banner -->
+    <div class="banner-warn" th:if="${!dash.verified}">
+        <i class="bi bi-hourglass-split"></i>
+        <div>
+            <strong>Your company is waiting for verification.</strong>
+            <div class="small text-muted-ft">
+                An admin will review your profile. Until then you will not appear in the directory or receive RFQs.
+                Meanwhile, complete your <a th:href="@{/manufacturer/profile}">profile</a> and add your
+                <a th:href="@{/manufacturer/machines}">machines</a>.
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-gear-wide-connected"></i></div>
+                <div>
+                    <div class="stat-value"><span th:text="${dash.activeMachines}">0</span><small class="fs-6 text-muted-ft" th:text="${' / ' + dash.totalMachines}"> / 0</small></div>
+                    <div class="stat-label">Active machines</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon warn"><i class="bi bi-inbox"></i></div>
+                <div><div class="stat-value" th:text="${dash.matchingOpenRfqs}">0</div><div class="stat-label">Matching open RFQs</div></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon ok"><i class="bi bi-box-seam"></i></div>
+                <div><div class="stat-value" th:text="${dash.activeOrders}">0</div><div class="stat-label">Orders in progress</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <a class="quick-action" th:href="@{/manufacturer/machines/new}"><i class="bi bi-plus-square"></i>
+                <span>Add a machine<small>List your capacity</small></span></a>
+        </div>
+        <div class="col-md-4">
+            <a class="quick-action" th:href="@{/manufacturer/machines/import}"><i class="bi bi-filetype-csv"></i>
+                <span>Import machines<small>Upload a CSV file</small></span></a>
+        </div>
+        <div class="col-md-4">
+            <a class="quick-action" th:href="@{/manufacturer/rfqs}"><i class="bi bi-inbox"></i>
+                <span>RFQ inbox<small>Quote on matching requests</small></span></a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Matching RFQs -->
+        <div class="col-xl-7">
+            <div class="ft-card h-100">
+                <div class="ft-card-header">
+                    <h2 class="ft-card-title">New matching RFQs</h2>
+                    <a th:href="@{/manufacturer/rfqs}" class="small">Open inbox</a>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(dash.matchingRfqs)}">
+                    <table class="table table-ft table-hover">
+                        <thead><tr><th>RFQ</th><th>Buyer</th><th>Quantity</th><th>Deadline</th></tr></thead>
+                        <tbody>
+                        <tr th:each="r : ${dash.matchingRfqs}">
+                            <td>
+                                <a th:href="@{/manufacturer/rfqs/{id}(id=${r.id})}" th:text="${r.title}">Title</a><br>
+                                <small th:text="${r.processName + ' · ' + r.materialName}">CNC · Steel</small>
+                            </td>
+                            <td th:text="${r.buyerName}">Buyer</td>
+                            <td th:text="${#numbers.formatDecimal(r.quantity, 1, 0) + ' ' + r.quantityUnit}">100 pcs</td>
+                            <td>
+                                <span th:text="${@fmt.date(r.quoteDeadline)}">date</span><br>
+                                <small th:text="${@fmt.timeLeft(r.quoteDeadline)}">3 days left</small>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <th:block th:if="${#lists.isEmpty(dash.matchingRfqs)}"><div th:replace="~{fragments/empty-state :: empty('bi-inbox', 'No matching RFQs right now', 'RFQs that match your processes and materials will appear here.', null, null)}"></div></th:block>
+            </div>
+        </div>
+
+        <!-- Recent orders -->
+        <div class="col-xl-5">
+            <div class="ft-card h-100">
+                <div class="ft-card-header">
+                    <h2 class="ft-card-title">Recent orders</h2>
+                    <a th:href="@{/manufacturer/orders}" class="small">View all</a>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(dash.recentOrders)}">
+                    <table class="table table-ft table-hover">
+                        <thead><tr><th>Order</th><th>Buyer</th><th>Status</th></tr></thead>
+                        <tbody>
+                        <tr th:each="o : ${dash.recentOrders}">
+                            <td>
+                                <a th:href="@{/manufacturer/orders/{id}(id=${o.id})}" th:text="${o.orderNumber}">ORD</a><br>
+                                <small th:text="${@fmt.money(o.totalAmount, o.currency)}">₹0</small>
+                            </td>
+                            <td th:text="${o.counterpartyName}">Buyer</td>
+                            <td><span th:replace="~{fragments/status-badge :: badge(${o.status})}"></span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <th:block th:if="${#lists.isEmpty(dash.recentOrders)}"><div th:replace="~{fragments/empty-state :: empty('bi-box-seam', 'No orders yet', 'Orders appear here when a buyer accepts your quotation.', null, null)}"></div></th:block>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

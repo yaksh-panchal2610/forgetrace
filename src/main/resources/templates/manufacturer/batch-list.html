@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Batches · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Batches</h1>
+            <p class="page-subtitle">Create batches, then send them for quality inspection. Approved batches get a QR passport.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:if="${orderId != null}" class="btn btn-ghost" th:href="@{/manufacturer/batches}">Show all</a>
+            <a class="btn btn-forge" th:href="${orderId != null} ? @{/manufacturer/batches/new(orderId=${orderId})} : @{/manufacturer/batches/new}">
+                <i class="bi bi-plus-lg me-1"></i> New batch</a>
+        </div>
+    </div>
+
+    <div class="ft-card">
+        <div class="table-responsive" th:if="${!#lists.isEmpty(batches)}">
+            <table class="table table-ft table-hover">
+                <thead><tr><th>Batch</th><th>Order</th><th>Quantity</th><th>Made on</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                <tr th:each="b : ${batches}">
+                    <td><strong th:text="${b.batchNumber}">BAT</strong></td>
+                    <td>
+                        <a th:href="@{/manufacturer/orders/{id}(id=${b.orderId})}" th:text="${b.orderNumber}">ORD</a><br>
+                        <small th:text="${b.itemTitle}">Item</small>
+                    </td>
+                    <td th:text="${b.quantity.stripTrailingZeros().toPlainString() + ' ' + b.quantityUnit}">50 pcs</td>
+                    <td th:text="${@fmt.localDate(b.manufactureDate)}">date</td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${b.status})}"></span></td>
+                    <td class="text-end text-nowrap">
+                        <form th:if="${b.status.name() == 'CREATED' or b.status.name() == 'REJECTED'}" class="d-inline"
+                              th:action="@{/manufacturer/batches/{id}/status(id=${b.id})}" method="post">
+                            <input type="hidden" name="status" value="IN_PROGRESS">
+                            <input type="hidden" name="orderId" th:value="${orderId}">
+                            <button type="submit" class="btn btn-sm btn-ghost"
+                                    th:text="${b.status.name() == 'REJECTED'} ? 'Rework' : 'Start'">Start</button>
+                        </form>
+                        <form th:if="${b.status.name() == 'IN_PROGRESS'}" class="d-inline"
+                              th:action="@{/manufacturer/batches/{id}/status(id=${b.id})}" method="post"
+                              data-confirm="Send this batch for quality inspection?">
+                            <input type="hidden" name="status" value="AWAITING_INSPECTION">
+                            <input type="hidden" name="orderId" th:value="${orderId}">
+                            <button type="submit" class="btn btn-sm btn-forge">Send for inspection</button>
+                        </form>
+                        <a th:if="${b.hasPassport}" class="btn btn-sm btn-ghost" th:href="@{/p/{t}(t=${b.passportToken})}" target="_blank">
+                            <i class="bi bi-qr-code"></i> Passport</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${#lists.isEmpty(batches)}"><div th:replace="~{fragments/empty-state :: empty('bi-stack', 'No batches yet', 'Create a batch once an order is in production.', '/manufacturer/batches/new', 'New batch')}"></div></th:block>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Inspector dashboard · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="${'Welcome, ' + currentUser.fullName}">Welcome</h1>
+            <p class="page-subtitle">Quality inspection</p>
+        </div>
+        <a class="btn btn-forge" th:href="@{/inspector/queue}"><i class="bi bi-list-check me-1"></i> Open queue</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="stat-card"><div class="stat-icon warn"><i class="bi bi-hourglass-split"></i></div>
+            <div><div class="stat-value" th:text="${dash.awaiting}">0</div><div class="stat-label">Awaiting inspection</div></div></div></div>
+        <div class="col-md-3"><div class="stat-card"><div class="stat-icon warn"><i class="bi bi-pause-circle"></i></div>
+            <div><div class="stat-value" th:text="${dash.onHold}">0</div><div class="stat-label">On hold</div></div></div></div>
+        <div class="col-md-3"><div class="stat-card"><div class="stat-icon ok"><i class="bi bi-check2-circle"></i></div>
+            <div><div class="stat-value" th:text="${dash.myPassed}">0</div><div class="stat-label">Passed by me</div></div></div></div>
+        <div class="col-md-3"><div class="stat-card"><div class="stat-icon"><i class="bi bi-x-circle"></i></div>
+            <div><div class="stat-value" th:text="${dash.myFailed}">0</div><div class="stat-label">Failed by me</div></div></div></div>
+    </div>
+
+    <div class="ft-card">
+        <div class="ft-card-header">
+            <h2 class="ft-card-title">Next in queue</h2>
+            <a th:href="@{/inspector/queue}" class="small">View all</a>
+        </div>
+        <div class="table-responsive" th:if="${!#lists.isEmpty(dash.queue)}">
+            <table class="table table-ft table-hover">
+                <thead><tr><th>Batch</th><th>Manufacturer</th><th>Item</th><th>Quantity</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="b : ${dash.queue}">
+                    <td th:text="${b.batchNumber}">BAT</td>
+                    <td th:text="${b.manufacturerName}">Mfr</td>
+                    <td><span th:text="${b.itemTitle}">Item</span><br><small th:text="${b.processName + ' · ' + b.materialName}">CNC</small></td>
+                    <td th:text="${b.quantity.stripTrailingZeros().toPlainString() + ' ' + b.quantityUnit}">50</td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${b.status})}"></span></td>
+                    <td class="text-end"><a class="btn btn-sm btn-forge" th:href="@{/inspector/batches/{id}(id=${b.id})}">Inspect</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${#lists.isEmpty(dash.queue)}"><div th:replace="~{fragments/empty-state :: empty('bi-clipboard-check', 'Queue is empty', 'Batches appear here when manufacturers send them for inspection.', null, null)}"></div></th:block>
+    </div>
+</div>
+</body>
+</html>

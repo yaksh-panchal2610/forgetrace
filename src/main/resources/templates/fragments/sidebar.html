@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- One menu link. Highlighted when the current URL starts with href. -->
+<a th:fragment="item(href, icon, label)" th:href="@{${href}}" class="nav-link-ft"
+   th:classappend="${currentPath != null and #strings.startsWith(currentPath, href)} ? 'active'">
+    <i class="bi" th:classappend="${icon}"></i><span th:text="${label}">Label</span>
+</a>
+
+<aside th:fragment="sidebar" class="app-sidebar">
+    <div class="sidebar-brand">
+        <a class="brand" th:href="@{/}"><span class="brand-mark">FT</span> ForgeTrace</a>
+    </div>
+
+    <!-- ===== Buyer ===== -->
+    <nav th:if="${navRole == 'BUYER'}">
+        <a th:replace="~{fragments/sidebar :: item('/buyer/dashboard', 'bi-speedometer2', 'Dashboard')}"></a>
+        <div class="nav-section">Sourcing</div>
+        <a th:replace="~{fragments/sidebar :: item('/buyer/rfqs', 'bi-file-earmark-text', 'RFQs')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/buyer/quotations', 'bi-cash-stack', 'Quotations')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/manufacturers', 'bi-buildings', 'Find manufacturers')}"></a>
+        <div class="nav-section">Orders</div>
+        <a th:replace="~{fragments/sidebar :: item('/buyer/orders', 'bi-box-seam', 'Orders')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/buyer/passports', 'bi-qr-code', 'Product passports')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/buyer/payments', 'bi-credit-card', 'Payments')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/buyer/disputes', 'bi-flag', 'Disputes')}"></a>
+        <div class="nav-section">Account</div>
+        <a th:replace="~{fragments/sidebar :: item('/buyer/profile', 'bi-building-gear', 'Profile & company')}"></a>
+    </nav>
+
+    <!-- ===== Manufacturer ===== -->
+    <nav th:if="${navRole == 'MANUFACTURER'}">
+        <a th:replace="~{fragments/sidebar :: item('/manufacturer/dashboard', 'bi-speedometer2', 'Dashboard')}"></a>
+        <div class="nav-section">Sales</div>
+        <a th:replace="~{fragments/sidebar :: item('/manufacturer/rfqs', 'bi-inbox', 'RFQ inbox')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/manufacturer/quotations', 'bi-cash-stack', 'Quotations')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/manufacturer/orders', 'bi-box-seam', 'Orders')}"></a>
+        <div class="nav-section">Production</div>
+        <a th:replace="~{fragments/sidebar :: item('/manufacturer/production', 'bi-kanban', 'Production board')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/manufacturer/batches', 'bi-stack', 'Batches')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/manufacturer/shipments', 'bi-truck', 'Shipments')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/manufacturer/payments', 'bi-credit-card', 'Payments')}"></a>
+        <div class="nav-section">Capacity</div>
+        <a th:replace="~{fragments/sidebar :: item('/manufacturer/machines', 'bi-gear-wide-connected', 'Machines')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/manufacturer/availability', 'bi-calendar-week', 'Availability')}"></a>
+        <div class="nav-section">Account</div>
+        <a th:replace="~{fragments/sidebar :: item('/manufacturer/profile', 'bi-building-gear', 'Profile & company')}"></a>
+    </nav>
+
+    <!-- ===== Quality inspector ===== -->
+    <nav th:if="${navRole == 'INSPECTOR'}">
+        <a th:replace="~{fragments/sidebar :: item('/inspector/dashboard', 'bi-speedometer2', 'Dashboard')}"></a>
+        <div class="nav-section">Quality</div>
+        <a th:replace="~{fragments/sidebar :: item('/inspector/queue', 'bi-list-check', 'Inspection queue')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/inspector/history', 'bi-clock-history', 'History')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/inspector/reports', 'bi-file-earmark-bar-graph', 'Reports')}"></a>
+    </nav>
+
+    <!-- ===== Admin ===== -->
+    <nav th:if="${navRole == 'ADMIN'}">
+        <a th:replace="~{fragments/sidebar :: item('/admin/reviews', 'bi-star', 'Reviews')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/admin/dashboard', 'bi-speedometer2', 'Dashboard')}"></a>
+        <div class="nav-section">Trust</div>
+        <a th:replace="~{fragments/sidebar :: item('/admin/verifications', 'bi-patch-check', 'Verifications')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/admin/organizations', 'bi-buildings', 'Organizations')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/admin/users', 'bi-people', 'Users')}"></a>
+        <div class="nav-section">Operations</div>
+        <a th:replace="~{fragments/sidebar :: item('/admin/rfqs', 'bi-file-earmark-text', 'RFQs')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/admin/orders', 'bi-box-seam', 'Orders')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/admin/machines', 'bi-gear-wide-connected', 'Machines')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/admin/batches', 'bi-stack', 'Batches')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/admin/payments', 'bi-credit-card', 'Payments')}"></a>
+        <div class="nav-section">Risk</div>
+        <a th:replace="~{fragments/sidebar :: item('/admin/recalls', 'bi-exclamation-octagon', 'Recalls')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/admin/disputes', 'bi-flag', 'Disputes')}"></a>
+        <div class="nav-section">System</div>
+        <a th:replace="~{fragments/sidebar :: item('/admin/reports', 'bi-file-earmark-bar-graph', 'Reports')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/admin/audit-logs', 'bi-journal-text', 'Audit log')}"></a>
+        <a th:replace="~{fragments/sidebar :: item('/admin/settings', 'bi-sliders', 'Settings')}"></a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a th:replace="~{fragments/sidebar :: item('/notifications', 'bi-bell', 'Notifications')}"></a>
+        <a class="nav-link-ft" th:href="@{/}"><i class="bi bi-globe2"></i><span>Public website</span></a>
+    </div>
+</aside>
+</html>

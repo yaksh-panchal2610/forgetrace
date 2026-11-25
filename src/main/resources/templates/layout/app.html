@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org"
+      th:fragment="layout(title, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:replace="${title}">ForgeTrace</title>
+    <th:block th:replace="~{fragments/head :: assets}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="app-body">
+<div class="app-shell">
+    <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+    <div class="app-main">
+        <header th:replace="~{fragments/topbar :: topbar}"></header>
+        <main class="app-content">
+            <div th:replace="~{fragments/flash-messages :: flash}"></div>
+            <div th:replace="${content}"></div>
+        </main>
+    </div>
+</div>
+<div class="sidebar-backdrop" data-sidebar-close></div>
+<div th:replace="~{fragments/confirm-modal :: modal}"></div>
+<th:block th:replace="~{fragments/head :: scripts}"></th:block>
+</body>
+</html>

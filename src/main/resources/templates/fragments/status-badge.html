@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--
+  Usage with any status enum that has getLabel():
+  <span th:replace="~{fragments/status-badge :: badge(${order.status})}"></span>
+  The colour comes from app.css (.status-open, .status-rejected, ...).
+-->
+<span th:fragment="badge(status)" class="status-badge"
+      th:classappend="${status != null} ? ${'status-' + #strings.toLowerCase(status.toString())}"
+      th:text="${status != null} ? ${status.label} : '—'">Status</span>
+</html>

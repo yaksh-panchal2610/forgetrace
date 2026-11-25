@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Availability · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Availability</h1>
+            <p class="page-subtitle">Working hours and maintenance decide when a machine can be booked for production.</p>
+        </div>
+        <!-- Machine selector -->
+        <form th:if="${!#lists.isEmpty(machines)}" th:action="@{/manufacturer/availability}" method="get" class="d-flex gap-2 align-items-center">
+            <label for="machineId" class="small text-muted-ft text-nowrap">Machine</label>
+            <select id="machineId" name="machineId" class="form-select" onchange="this.form.submit()">
+                <option th:each="m : ${machines}" th:value="${m.id}" th:text="${m.machineName}"
+                        th:selected="${m.id == selectedMachineId}">Machine</option>
+            </select>
+            <noscript><button type="submit" class="btn btn-ghost">Show</button></noscript>
+        </form>
+    </div>
+
+    <div th:if="${#lists.isEmpty(machines)}" class="ft-card"
+         th:insert="~{fragments/empty-state :: empty('bi-calendar-week', 'Add a machine first', 'Working hours and maintenance are set per machine.', '/manufacturer/machines/new', 'Add machine')}"></div>
+
+    <th:block th:if="${!#lists.isEmpty(machines)}">
+        <div class="banner-info">
+            <i class="bi bi-info-circle"></i>
+            <div class="small">
+                A machine with <strong>no working hours</strong> can be booked at any time.
+                Once you add hours, bookings must fit inside them. Use an end time of <strong>23:59</strong> for "until midnight".
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- ===== Working hours ===== -->
+            <div class="col-xl-6">
+                <div class="ft-card mb-4">
+                    <h2 class="ft-card-title mb-3"><i class="bi bi-clock me-2"></i>Weekly working hours</h2>
+                    <div class="table-responsive" th:if="${!#lists.isEmpty(rules)}">
+                        <table class="table table-ft">
+                            <thead><tr><th>Day</th><th>Hours</th><th>Valid</th><th></th></tr></thead>
+                            <tbody>
+                            <tr th:each="r : ${rules}">
+                                <td th:text="${dayNames[r.dayOfWeek - 1]}">Monday</td>
+                                <td th:text="${r.startTime + ' – ' + r.endTime}">09:00 – 18:00</td>
+                                <td>
+                                    <small th:text="${'From ' + @fmt.localDate(r.validFrom)}">From</small><br>
+                                    <small th:text="${r.validUntil != null} ? ${'Until ' + @fmt.localDate(r.validUntil)} : 'No end date'">Until</small>
+                                </td>
+                                <td class="text-end">
+                                    <form th:action="@{/manufacturer/availability/rules/{id}/delete(id=${r.id})}" method="post"
+                                          class="m-0" data-confirm="Remove these working hours?">
+                                        <input type="hidden" name="machineId" th:value="${selectedMachineId}">
+                                        <button type="submit" class="btn btn-sm btn-ghost" title="Remove"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p th:if="${#lists.isEmpty(rules)}" class="text-muted-ft small mb-0">
+                        No working hours set - this machine is treated as available 24/7.
+                    </p>
+                </div>
+
+                <div class="ft-card">
+                    <h2 class="ft-card-title mb-3">Add working hours</h2>
+                    <form th:action="@{/manufacturer/availability/rules}" th:object="${ruleForm}" method="post" novalidate>
+                        <input type="hidden" th:field="*{machineId}">
+                        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                            <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+                        </div>
+
+                        <label class="form-label">Days</label>
+                        <div class="check-grid mb-1" th:classappend="${#fields.hasErrors('days')} ? 'has-error'">
+                            <div class="form-check" th:each="d : ${#numbers.sequence(1, 7)}">
+                                <input class="form-check-input" type="checkbox" th:field="*{days}" th:value="${d}">
+                                <label class="form-check-label" th:for="${#ids.prev('days')}" th:text="${dayNames[d - 1]}">Monday</label>
+                            </div>
+                        </div>
+                        <div class="text-danger small mb-2" th:if="${#fields.hasErrors('days')}" th:errors="*{days}"></div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-6">
+                                <label class="form-label" for="startTime">Start</label>
+                                <input type="time" th:field="*{startTime}" class="form-control" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{startTime}"></div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="endTime">End</label>
+                                <input type="time" th:field="*{endTime}" class="form-control" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{endTime}"></div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="validFrom">Valid from</label>
+                                <input type="date" th:field="*{validFrom}" class="form-control" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{validFrom}"></div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="validUntil">Valid until <span class="text-muted-ft">(optional)</span></label>
+                                <input type="date" th:field="*{validUntil}" class="form-control" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{validUntil}"></div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-forge mt-3" data-loading-text="Saving...">Add hours</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ===== Maintenance ===== -->
+            <div class="col-xl-6">
+                <div class="ft-card mb-4">
+                    <h2 class="ft-card-title mb-3"><i class="bi bi-tools me-2"></i>Planned maintenance</h2>
+                    <div class="table-responsive" th:if="${!#lists.isEmpty(blocks)}">
+                        <table class="table table-ft">
+                            <thead><tr><th>From</th><th>To</th><th>Reason</th><th></th></tr></thead>
+                            <tbody>
+                            <tr th:each="b : ${blocks}">
+                                <td th:text="${@fmt.dateTime(b.startAt)}">start</td>
+                                <td th:text="${@fmt.dateTime(b.endAt)}">end</td>
+                                <td th:text="${b.reason} ?: '—'">Reason</td>
+                                <td class="text-end">
+                                    <form th:action="@{/manufacturer/availability/maintenance/{id}/delete(id=${b.id})}" method="post"
+                                          class="m-0" data-confirm="Remove this maintenance period?">
+                                        <input type="hidden" name="machineId" th:value="${selectedMachineId}">
+                                        <button type="submit" class="btn btn-sm btn-ghost" title="Remove"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p th:if="${#lists.isEmpty(blocks)}" class="text-muted-ft small mb-0">No maintenance planned.</p>
+                </div>
+
+                <div class="ft-card">
+                    <h2 class="ft-card-title mb-3">Block time for maintenance</h2>
+                    <form th:action="@{/manufacturer/availability/maintenance}" th:object="${blockForm}" method="post" novalidate>
+                        <input type="hidden" th:field="*{machineId}">
+                        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                            <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="startAt">From (IST)</label>
+                                <input type="datetime-local" th:field="*{startAt}" class="form-control" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{startAt}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="endAt">To (IST)</label>
+                                <input type="datetime-local" th:field="*{endAt}" class="form-control" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{endAt}"></div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="reason">Reason <span class="text-muted-ft">(optional)</span></label>
+                                <input type="text" th:field="*{reason}" class="form-control" th:errorclass="is-invalid"
+                                       placeholder="e.g. Spindle service">
+                                <div class="invalid-feedback" th:errors="*{reason}"></div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-forge mt-3" data-loading-text="Saving...">Add maintenance</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </th:block>
+</div>
+</body>
+</html>

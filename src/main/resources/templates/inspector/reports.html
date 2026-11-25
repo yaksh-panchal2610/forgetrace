@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Quality reports · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header"><div><h1 class="page-title">Quality summary</h1>
+        <p class="page-subtitle">Your inspection results so far.</p></div></div>
+    <div class="row g-3">
+        <div class="col-md-4"><div class="stat-card"><div class="stat-icon ok"><i class="bi bi-graph-up"></i></div>
+            <div><div class="stat-value" th:text="${dash.passRatePercent + '%'}">0%</div><div class="stat-label">Pass rate (passed ÷ decided)</div></div></div></div>
+        <div class="col-md-4"><div class="stat-card"><div class="stat-icon"><i class="bi bi-clipboard-data"></i></div>
+            <div><div class="stat-value" th:text="${dash.myTotal}">0</div><div class="stat-label">Inspections recorded</div></div></div></div>
+        <div class="col-md-4"><div class="stat-card"><div class="stat-icon warn"><i class="bi bi-pause-circle"></i></div>
+            <div><div class="stat-value" th:text="${dash.myOnHold}">0</div><div class="stat-label">Put on hold</div></div></div></div>
+    </div>
+</div>
+</body>
+</html>

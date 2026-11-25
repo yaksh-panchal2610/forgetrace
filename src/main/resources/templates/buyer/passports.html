@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Product passports · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Product passports</h1>
+            <p class="page-subtitle">Every inspected and approved batch from your orders. Share the link or print the QR code.</p>
+        </div>
+    </div>
+
+    <div class="recall-alert mb-4" th:each="n : ${recalls}">
+        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+            <div>
+                <strong class="passport-invalid"><i class="bi bi-exclamation-octagon-fill"></i>
+                    <span th:text="${'Recall: batch ' + n.batchNumber}">Recall</span></strong>
+                <span class="ms-2" th:replace="~{fragments/status-badge :: badge(${n.severity})}"></span>
+                <p class="mb-1 mt-2" th:text="${n.reason}">reason</p>
+                <small class="text-muted-ft" th:text="${'Issued ' + @fmt.dateTime(n.createdAt)}">d</small>
+                <a th:if="${n.passportToken != null}" class="small ms-2" th:href="@{/p/{t}(t=${n.passportToken})}" target="_blank">View passport</a>
+            </div>
+            <form th:action="@{/buyer/recalls/{id}/acknowledge(id=${n.recipientId})}" method="post">
+                <button type="submit" class="btn btn-forge">I have read this notice</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="ft-card">
+        <div class="table-responsive" th:if="${!#lists.isEmpty(batches)}">
+            <table class="table table-ft table-hover">
+                <thead><tr><th>Batch</th><th>Order</th><th>Manufacturer</th><th>Quantity</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="b : ${batches}">
+                    <td th:text="${b.batchNumber}">BAT</td>
+                    <td><a th:href="@{/buyer/orders/{id}(id=${b.orderId})}" th:text="${b.orderNumber}">ORD</a><br><small th:text="${b.itemTitle}">Item</small></td>
+                    <td th:text="${b.manufacturerName}">Mfr</td>
+                    <td th:text="${b.quantity.stripTrailingZeros().toPlainString() + ' ' + b.quantityUnit}">50</td>
+                    <td><span th:replace="~{fragments/status-badge :: badge(${b.status})}"></span></td>
+                    <td class="text-end"><a class="btn btn-sm btn-forge" th:href="@{/p/{t}(t=${b.passportToken})}" target="_blank"><i class="bi bi-qr-code"></i> Open</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${#lists.isEmpty(batches)}"><div th:replace="~{fragments/empty-state :: empty('bi-qr-code', 'No passports yet', 'A passport is created automatically when an inspector approves a batch of your order.', null, null)}"></div></th:block>
+    </div>
+</div>
+</body>
+</html>

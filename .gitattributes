@@ -1,0 +1,6 @@
+# Linux scripts must keep LF line endings, even when committed from Windows
+*.sh   text eol=lf
+mvnw   text eol=lf
+*.yml  text eol=lf
+*.conf text eol=lf
+*.template text eol=lf

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/public :: layout(~{::title}, ~{::content})}">
+<head><title>Manufacturers · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <section class="section pt-5">
+        <div class="container">
+            <span class="eyebrow">Directory</span>
+            <h1 class="section-title mb-2">Find a verified manufacturer</h1>
+            <p class="section-lead mb-4">Every manufacturer listed here has been reviewed by the ForgeTrace team.</p>
+
+            <form th:action="@{/manufacturers}" th:object="${criteria}" method="get" class="filter-bar mb-4">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small" for="q">Search</label>
+                        <input type="search" th:field="*{q}" class="form-control" placeholder="Company name or keyword">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small" for="processId">Process</label>
+                        <select th:field="*{processId}" class="form-select">
+                            <option value="">Any process</option>
+                            <option th:each="p : ${processes}" th:value="${p.id}" th:text="${p.processName}">CNC</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small" for="materialId">Material</label>
+                        <select th:field="*{materialId}" class="form-select">
+                            <option value="">Any</option>
+                            <option th:each="mat : ${materials}" th:value="${mat.id}" th:text="${mat.materialName}">Steel</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small" for="city">City</label>
+                        <input type="text" th:field="*{city}" class="form-control" placeholder="e.g. Pune">
+                    </div>
+                    <div class="col-md-1 d-grid">
+                        <button type="submit" class="btn btn-forge" aria-label="Search"><i class="bi bi-search"></i></button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <p class="text-muted-ft mb-0">
+                    <strong class="text-white" th:text="${#lists.size(results)}">0</strong> manufacturer(s) found
+                </p>
+                <a th:if="${criteria.hasFilters()}" th:href="@{/manufacturers}" class="small">Clear filters</a>
+            </div>
+
+            <div class="row g-4" th:if="${!#lists.isEmpty(results)}">
+                <div class="col-md-6 col-lg-4" th:each="m : ${results}">
+                    <div th:replace="~{public/manufacturers :: card(${m})}"></div>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(results)}" class="feature-card text-center py-5">
+                <i class="bi bi-search fs-2 text-muted-ft d-block mb-2"></i>
+                <h3>No manufacturers match these filters</h3>
+                <p class="mb-0">Try another process, material or city.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Reusable manufacturer card (also used on the home page) -->
+<a th:fragment="card(m)" class="mfr-card text-decoration-none" th:href="@{/manufacturers/{id}(id=${m.organizationId})}">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+        <h3 th:text="${m.displayName}">Company</h3>
+        <span class="verified-tag text-nowrap"><i class="bi bi-patch-check-fill"></i> Verified</span>
+    </div>
+    <div class="mfr-meta">
+        <i class="bi bi-geo-alt"></i> <span th:text="${m.location}">City</span>
+        <th:block th:if="${m.yearsInOperation != null}">
+            · <span th:text="${m.yearsInOperation}">5</span> yrs
+        </th:block>
+    </div>
+    <p th:if="${m.shortDescription != null}" th:text="${m.shortDescription}">Description</p>
+    <div>
+        <span class="chip" th:each="p, stat : ${m.processes}" th:if="${stat.index < 3}" th:text="${p}">CNC</span>
+        <span class="chip" th:if="${#lists.size(m.processes) > 3}" th:text="${'+' + (#lists.size(m.processes) - 3)}">+2</span>
+    </div>
+    <div class="mfr-footer">
+        <span class="rating" th:if="${m.averageRating != null}">
+            <i class="bi bi-star-fill"></i> <span th:text="${@fmt.rating(m.averageRating)}">4.5</span>
+        </span>
+        <span class="text-muted-ft small" th:if="${m.averageRating == null}">No reviews yet</span>
+        <span class="small">View profile <i class="bi bi-arrow-right"></i></span>
+    </div>
+</a>
+</body>
+</html>

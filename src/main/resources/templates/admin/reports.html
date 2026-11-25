@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: layout(~{::title}, ~{::content})}">
+<head><title>Reports · ForgeTrace</title></head>
+<body>
+<div th:fragment="content">
+    <div class="page-header"><div><h1 class="page-title">Reports</h1>
+        <p class="page-subtitle">Reports are generated on a background thread. This page refreshes until they finish.</p></div></div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <form class="ft-card" th:action="@{/admin/reports}" method="post">
+                <h2 class="ft-card-title mb-3">Generate report</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="type">Report</label>
+                        <select id="type" name="type" class="form-select">
+                            <option th:each="t : ${types}" th:value="${t}" th:text="${t.label}">Orders</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="format">Format</label>
+                        <select id="format" name="format" class="form-select">
+                            <option th:each="f : ${formats}" th:value="${f}" th:text="${f.label}">PDF</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6"><label class="form-label" for="from">From</label>
+                        <input type="date" id="from" name="from" class="form-control" th:value="${defaultFrom}"></div>
+                    <div class="col-md-6"><label class="form-label" for="to">To</label>
+                        <input type="date" id="to" name="to" class="form-control" th:value="${defaultTo}"></div>
+                </div>
+                <button type="submit" class="btn btn-forge mt-3"><i class="bi bi-gear me-1"></i> Generate</button>
+            </form>
+        </div>
+        <div class="col-lg-5">
+            <form class="ft-card" th:action="@{/admin/reports/audit-export}" method="post">
+                <h2 class="ft-card-title mb-3">Export audit log (CSV)</h2>
+                <div class="row g-3">
+                    <div class="col-6"><label class="form-label" for="afrom">From</label>
+                        <input type="date" id="afrom" name="from" class="form-control" th:value="${defaultFrom}"></div>
+                    <div class="col-6"><label class="form-label" for="ato">To</label>
+                        <input type="date" id="ato" name="to" class="form-control" th:value="${defaultTo}"></div>
+                </div>
+                <button type="submit" class="btn btn-ghost mt-3"><i class="bi bi-download me-1"></i> Export</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="ft-card mb-4" th:if="${!#lists.isEmpty(jobs)}" th:attr="data-auto-refresh=${running}">
+        <h2 class="ft-card-title mb-3">Recent requests</h2>
+        <table class="table table-ft table-sm mb-0">
+            <thead><tr><th>Requested</th><th>Report</th><th>Period</th><th>By</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="j : ${jobs}">
+                <td th:text="${@fmt.dateTime(j.createdAt)}">t</td>
+                <td th:text="${j.type.label + ' · ' + j.format.label}">r</td>
+                <td th:text="${@fmt.localDate(j.from) + ' – ' + @fmt.localDate(j.to)}">p</td>
+                <td th:text="${j.requestedBy}">who</td>
+                <td>
+                    <span th:if="${!j.finished}" class="text-info"><span class="spinner-border spinner-border-sm"></span> <span th:text="${j.status.name()}">RUNNING</span></span>
+                    <span th:if="${j.status.name() == 'DONE'}" class="measure-pass">Done</span>
+                    <span th:if="${j.status.name() == 'FAILED'}" class="measure-fail" th:text="${'Failed: ' + j.error}">Failed</span>
+                </td>
+                <td class="text-end"><a th:if="${j.fileName != null}" class="btn btn-sm btn-forge" th:href="@{/admin/reports/download(name=${j.fileName})}"><i class="bi bi-download"></i></a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="ft-card">
+        <h2 class="ft-card-title mb-3">Saved files</h2>
+        <table class="table table-ft table-sm mb-0" th:if="${!#lists.isEmpty(files)}">
+            <thead><tr><th>File</th><th>Size</th><th>Created</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="f : ${files}">
+                <td th:text="${f.name}">file</td>
+                <td th:text="${f.sizeKb + ' KB'}">1 KB</td>
+                <td th:text="${@fmt.dateTime(f.modifiedAt)}">d</td>
+                <td class="text-end"><a class="btn btn-sm btn-ghost" th:href="@{/admin/reports/download(name=${f.name})}"><i class="bi bi-download"></i></a></td>
+            </tr>
+            </tbody>
+        </table>
+        <p class="small text-muted-ft mb-0" th:if="${#lists.isEmpty(files)}">No files yet.</p>
+    </div>
+
+    <script>
+        (function () {
+            const box = document.querySelector('[data-auto-refresh="true"]');
+            if (box) setTimeout(function () { window.location.reload(); }, 2500);
+        })();
+    </script>
+</div>
+</body>
+</html>
